@@ -129,7 +129,7 @@
     <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
         
         <!-- Left Sidebar: Manual Actions & Inventory -->
-        <aside class="w-full md:w-72 h-[32vh] min-h-[160px] md:h-auto md:max-h-none bg-zinc-900 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col z-10 flex-shrink-0">
+        <aside class="w-full md:w-72 max-h-[35vh] md:max-h-none bg-zinc-900 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col z-10 shrink-0">
             <!-- Manual Gathering -->
             <div class="p-2.5 md:p-4 border-b border-zinc-800 shrink-0">
                 <h2 class="text-[10px] md:text-xs uppercase text-zinc-500 tracking-wider mb-2 md:mb-3 font-bold font-mono">Manual Extraction</h2>
@@ -159,12 +159,12 @@
             </div>
 
             <!-- Inventory List -->
-            <div class="flex-1 overflow-y-auto p-2.5 md:p-4">
+            <div class="flex-auto min-h-0 overflow-y-auto p-2.5 md:p-4">
                 <h2 class="text-[10px] md:text-xs uppercase text-zinc-500 tracking-wider mb-2 md:mb-3 font-bold font-mono flex justify-between items-center">
                     <span>Local Cache</span>
                     <span id="storageCount" class="text-brand font-mono text-[10px] md:text-[11px]">0 Files</span>
                 </h2>
-                <div id="inventoryContainer" class="grid grid-cols-3 xs:grid-cols-4 md:grid-cols-2 gap-1.5">
+                <div id="inventoryContainer" class="grid grid-cols-4 xs:grid-cols-5 md:grid-cols-2 gap-1 md:gap-1.5">
                     <!-- Inventory items injected dynamically -->
                 </div>
             </div>
@@ -1399,9 +1399,9 @@
                     let fillPct = Math.min(100, Math.round((amount / itemMax) * 100));
 
                     invContainer.innerHTML += `
-                        <div class="relative overflow-hidden p-1 rounded bg-zinc-800/60 hover:bg-zinc-800 transition-colors border border-zinc-700/60 flex items-center justify-between gap-1 has-tooltip cursor-help" data-tip="${item.name}&#10;Cached: ${formatNumber(amount)} / ${formatNumber(itemMax)}&#10;Cap Filled: ${fillPct}%">
-                            <span class="text-sm shrink-0 leading-none ${item.color}">${item.icon}</span>
-                            <span class="font-mono text-zinc-200 text-[10px] font-semibold leading-none">${formatNumber(amount)}</span>
+                        <div class="relative overflow-hidden p-0.5 px-1 md:p-1 rounded bg-zinc-800/60 hover:bg-zinc-800 transition-colors border border-zinc-700/60 flex items-center justify-between gap-0.5 md:gap-1 has-tooltip cursor-help" data-tip="${item.name}&#10;Cached: ${formatNumber(amount)} / ${formatNumber(itemMax)}&#10;Cap Filled: ${fillPct}%">
+                            <span class="text-xs md:text-sm shrink-0 leading-none ${item.color}">${item.icon}</span>
+                            <span class="font-mono text-zinc-200 text-[9px] md:text-[10px] font-semibold leading-none">${formatNumber(amount)}</span>
                             <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-zinc-900/80">
                                 <div class="h-full bg-brand transition-all" style="width: ${fillPct}%"></div>
                             </div>
