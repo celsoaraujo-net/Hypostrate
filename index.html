@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hypostrate</title>
     
+    <!-- UPDATE THIS VERSION TO TRIGGER AUTOMATIC APP REFRESH FOR INSTALLED USERS -->
+    <meta name="app-version" content="1.0.0">
+    
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#09090b">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -279,6 +282,7 @@
     </div>
 
     <!-- Toast Container -->
+    <!-- Added pointer-events-none but will allow specific toasts to be clickable -->
     <div id="toastContainer" class="fixed bottom-4 right-4 flex flex-col gap-2 z-[60] pointer-events-none"></div>
 
     <!-- Global Floating Tooltip -->
@@ -430,6 +434,71 @@
             };
             img.src = svgDataUrl;
         })();
+
+        // --- AUTOMATIC UPDATE SYSTEM ---
+        // Seamlessly checks for remote modifications to this file without SW requirements
+        async function checkForUpdates() {
+            try {
+                const metaTag = document.querySelector('meta[name="app-version"]');
+                if (!metaTag) return;
+                const currentVersion = metaTag.content;
+                
+                // Cache-busting URL parameter guarantees we bypass the browser's PWA caching
+                const url = new URL(window.location.href.split('?')[0]);
+                url.searchParams.set('t', Date.now());
+                
+                const response = await fetch(url.href, { cache: 'no-store' });
+                if (!response.ok) return;
+                
+                const text = await response.text();
+                const match = text.match(/<meta\s+name="app-version"\s+content="([^"]+)"/i);
+                
+                if (match && match[1] && match[1] !== currentVersion) {
+                    showUpdatePrompt();
+                }
+            } catch (e) {
+                // If offline or blocked, silently fail so gameplay isn't disrupted
+                console.log("Could not poll for updates (offline or restricted).");
+            }
+        }
+
+        function showUpdatePrompt() {
+            if (document.getElementById('updateToast')) return; // Deduplication
+            
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.id = 'updateToast';
+            // Force pointer-events-auto so this specific toast is clickable
+            toast.className = `px-4 py-3 rounded shadow-lg border-l-4 border-brand text-brand bg-zinc-900/95 font-mono text-sm toast-enter flex items-center justify-between gap-4 backdrop-blur-md pointer-events-auto`;
+            toast.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <svg class="animate-pulse w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Architecture Update Available</span>
+                </div>
+                <button onclick="applyUpdate()" class="bg-brand/20 hover:bg-brand/40 text-brand px-3 py-1 rounded border border-brand/50 transition-colors font-bold shadow-sm">
+                    REBOOT
+                </button>
+            `;
+            
+            container.appendChild(toast);
+        }
+
+        window.applyUpdate = function() {
+            // Save state immediately before reloading just to be safe
+            saveToLocal();
+            
+            // Purge any hidden caches that mobile browsers might have made
+            if ('caches' in window) {
+                caches.keys().then(names => names.forEach(name => caches.delete(name)));
+            }
+            
+            // Force a true network reload via unique query string
+            const url = new URL(window.location.href.split('?')[0]);
+            url.searchParams.set('v', Date.now()); // Break cache
+            window.location.replace(url.href);
+        };
 
         /* Database Definitions */
         const ITEMS = {
@@ -1761,8 +1830,14 @@
         }
         
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') saveToLocal();
+            if (document.visibilityState === 'hidden') {
+                saveToLocal();
+            } else if (document.visibilityState === 'visible') {
+                // Periodically check for structural file updates upon tabbing back in
+                checkForUpdates();
+            }
         });
+        
         window.addEventListener('beforeunload', saveToLocal);
 
         function init() {
@@ -1775,12 +1850,13 @@
             if (overlay) {
                 setTimeout(() => {
                     overlay.classList.add('hidden');
-                }, 500); // Tiny dramatic pause for terminal boot feel
+                    // Delay the initial update check to keep the boot process feeling responsive
+                    setTimeout(checkForUpdates, 3000);
+                }, 500);
             }
 
             setInterval(gameTick, 1000); 
             setInterval(queueTick, 50);
-            
             setInterval(saveToLocal, 10000); 
         }
 
