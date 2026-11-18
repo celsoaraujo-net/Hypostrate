@@ -856,8 +856,11 @@
             }
         };
 
+        let isResetting = false;
+
         window.hardReset = function() {
             if(confirm("WARNING: This will completely wipe your local save data and restart the architecture from scratch. This cannot be undone.\n\nExecute reset?")) {
+                isResetting = true;
                 localStorage.removeItem(SAVE_KEY);
                 location.reload();
             }
@@ -1798,6 +1801,7 @@
         const SAVE_KEY = 'hypostrate_localSave_v1';
         
         function saveToLocal() {
+            if (isResetting) return;
             try {
                 localStorage.setItem(SAVE_KEY, JSON.stringify(state));
             } catch(e) {
