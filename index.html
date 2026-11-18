@@ -319,16 +319,36 @@
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto pr-1">
-                <div id="playtestItemsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                    <!-- Populated dynamically -->
+            <div class="flex-1 overflow-y-auto pr-1 space-y-6">
+                <!-- Items Section -->
+                <div>
+                    <h3 class="text-xs text-zinc-500 uppercase tracking-wider mb-2 font-bold font-mono">Inject Resources</h3>
+                    <div id="playtestItemsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Research Section -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs text-zinc-500 uppercase tracking-wider font-bold font-mono">Force Compile Research</h3>
+                        <button onclick="devUnlockAllAvailableTech()" class="text-[10px] bg-zinc-800 hover:bg-zinc-700 px-2 py-1 rounded text-zinc-300 transition-colors border border-zinc-700 font-mono">Compile All Available</button>
+                    </div>
+                    <div id="devResearchGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <!-- Populated dynamically -->
+                    </div>
                 </div>
             </div>
 
             <div class="flex justify-between items-center pt-2 border-t border-zinc-800 text-xs font-mono">
-                <button onclick="playtestAddAll()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-3 py-1.5 rounded transition-colors">
-                    + Inject All
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="playtestAddAll()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-3 py-1.5 rounded transition-colors">
+                        + Inject All
+                    </button>
+                    <button onclick="hardReset()" class="bg-red-950/60 hover:bg-red-900/60 text-red-400 border border-red-800/60 px-3 py-1.5 rounded transition-colors">
+                        HARD RESET
+                    </button>
+                </div>
                 <button onclick="closePlaytestModal()" class="btn-industrial px-4 py-1.5 rounded font-bold text-zinc-200">
                     Exit
                 </button>
@@ -576,6 +596,7 @@
             if (modal) {
                 modal.classList.remove('hidden');
                 renderPlaytestItems();
+                renderDevResearch();
             }
         };
 
@@ -635,6 +656,93 @@
             updateUI();
             renderPlaytestItems();
             showToast(`${amount > 0 ? '+' : ''}${formatNumber(amount)} to all clusters`, "info");
+        };
+
+        function renderDevResearch() {
+            const grid = document.getElementById('devResearchGrid');
+            if(!grid) return;
+            
+            grid.innerHTML = Object.entries(TECH_TREE).map(([id, tech]) => {
+                const isUnlocked = state.unlockedTechs.includes(id);
+                const reqMet = tech.req.every(r => state.unlockedTechs.includes(r));
+                
+                let status = isUnlocked ? 'Compiled' : (reqMet ? 'Ready' : 'Locked');
+                let btnClass = isUnlocked 
+                    ? 'bg-zinc-800 text-zinc-500 border-zinc-800 opacity-60 cursor-default' 
+                    : (reqMet 
+                        ? 'bg-zinc-900 border-zinc-700 hover:border-brand/50 text-zinc-300 hover:text-white cursor-pointer' 
+                        : 'bg-zinc-950 border-zinc-900 text-zinc-600 opacity-50 cursor-not-allowed');
+                
+                return `
+                    <button onclick="devUnlockTech('${id}')" class="p-2 rounded flex justify-between items-center text-left border transition-colors font-mono ${btnClass}" ${!reqMet || isUnlocked ? 'disabled' : ''}>
+                        <div class="flex items-center gap-2 truncate pr-2">
+                            <span class="text-lg">${tech.icon}</span>
+                            <span class="text-[11px] font-bold truncate">${tech.name}</span>
+                        </div>
+                        <span class="text-[9px] uppercase tracking-wider shrink-0 font-bold ${reqMet && !isUnlocked ? 'text-brand' : ''}">${status}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        window.devUnlockTech = function(id) {
+            const tech = TECH_TREE[id];
+            if(state.unlockedTechs.includes(id)) return;
+            const reqMet = tech.req.every(r => state.unlockedTechs.includes(r));
+            if(!reqMet) return;
+
+            state.unlockedTechs.push(id);
+            if (tech.unlocks) {
+                tech.unlocks.forEach(u => {
+                    if (!state.unlockedRecipes.includes(u)) {
+                        state.unlockedRecipes.push(u);
+                    }
+                });
+            }
+            updateUI();
+            renderDevResearch();
+            showToast(`Force Compiled: ${tech.name}`, "success");
+        };
+
+        window.devUnlockAllAvailableTech = function() {
+            let unlockedAny = false;
+            let keepChecking = true;
+            
+            while(keepChecking) {
+                keepChecking = false;
+                for (let [id, tech] of Object.entries(TECH_TREE)) {
+                    if (!state.unlockedTechs.includes(id)) {
+                        const reqMet = tech.req.every(r => state.unlockedTechs.includes(r));
+                        if (reqMet) {
+                            state.unlockedTechs.push(id);
+                            if (tech.unlocks) {
+                                tech.unlocks.forEach(u => {
+                                    if (!state.unlockedRecipes.includes(u)) {
+                                        state.unlockedRecipes.push(u);
+                                    }
+                                });
+                            }
+                            keepChecking = true;
+                            unlockedAny = true;
+                        }
+                    }
+                }
+            }
+            
+            if(unlockedAny) {
+                updateUI();
+                renderDevResearch();
+                showToast(`Force Compiled all available nodes.`, "success");
+            } else {
+                showToast(`No new nodes ready to compile.`, "info");
+            }
+        };
+
+        window.hardReset = function() {
+            if(confirm("WARNING: This will completely wipe your local save data and restart the architecture from scratch. This cannot be undone.\n\nExecute reset?")) {
+                localStorage.removeItem(SAVE_KEY);
+                location.reload();
+            }
         };
 
         window.exportSave = function() {
