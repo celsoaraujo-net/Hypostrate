@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hypostrate</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#09090b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Hypostrate">
+    <meta name="description" content="An offline-capable incremental reality simulation game.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#10b981', // Phosphor green
+                        crt: '#f59e0b',   // Amber CRT
+                        bgdark: '#09090b' // Terminal black
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;600;700&display=swap');
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #09090b;
+            color: #d4d4d8;
+            user-select: none;
+            overflow: hidden;
+            overscroll-behavior: none; 
+        }
+
+        h1, h2, h3, h4, h5, .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a; 
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f3f46; 
+        }
+
+        .btn-industrial {
+            background: linear-gradient(180deg, #27272a 0%, #18181b 100%);
+            border: 1px solid #3f3f46;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 4px rgba(0,0,0,0.5);
+            transition: all 0.1s;
+        }
+        .btn-industrial:hover:not(:disabled) {
+            background: linear-gradient(180deg, #3f3f46 0%, #27272a 100%);
+            border-color: #52525b;
+        }
+        .btn-industrial:active:not(:disabled) {
+            background: #18181b;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            transform: translateY(1px);
+        }
+        .btn-industrial:disabled {
+            cursor: default !important;
+            background: linear-gradient(180deg, #18181b 0%, #09090b 100%);
+            border-color: #27272a;
+            box-shadow: none;
+            opacity: 0.5;
+        }
+
+        .toast-enter {
+            animation: slideInRight 0.3s forwards;
+        }
+        .toast-exit {
+            animation: slideOutRight 0.3s forwards;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        .tab-active {
+            border-bottom: 2px solid #10b981;
+            color: #f4f4f5;
+            background-color: #18181b;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- Top Header -->
+    <header class="bg-zinc-950 border-b border-zinc-800 p-3 flex justify-between items-center z-20 shadow-md shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="text-brand font-bold text-xl sm:text-2xl tracking-widest flex items-center gap-2 font-mono">
+                <svg class="animate-[pulse_2s_ease-in-out_infinite]" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+                HYPOSTRATE
+            </div>
+        </div>
+        <div class="flex items-center gap-2 text-sm font-mono">
+            <button onclick="openPlaytestModal()" class="text-xs bg-emerald-900/40 hover:bg-emerald-800/60 border border-emerald-500/50 text-emerald-400 px-2.5 py-1 rounded font-bold transition-colors flex items-center gap-1 shadow-sm">
+                <span>[ DEV ]</span>
+            </button>
+            <button onclick="exportSave()" class="text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 px-2.5 py-1 rounded text-zinc-300 transition-colors hidden sm:block">Export</button>
+            <button onclick="importSave()" class="text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 px-2.5 py-1 rounded text-zinc-300 transition-colors hidden sm:block">Import</button>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Sidebar: Manual Actions & Inventory -->
+        <aside class="w-72 bg-zinc-900 border-r border-zinc-800 flex flex-col z-10 flex-shrink-0">
+            <!-- Manual Gathering -->
+            <div class="p-4 border-b border-zinc-800 shrink-0">
+                <h2 class="text-xs uppercase text-zinc-500 tracking-wider mb-3 font-bold font-mono">Manual Extraction</h2>
+                <div class="space-y-2">
+                    <button id="btn-gather-carbon" onclick="manualGather('carbon')" class="w-full btn-industrial rounded py-2 px-3 flex justify-between items-center text-zinc-400 has-tooltip hidden">
+                        <span class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" class="inline-block"><path d="M12 2 L20 7 L20 17 L12 22 L4 17 L4 7 Z" fill="#18181b" stroke="#52525b" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 2 L12 12 M4 7 L12 12 M20 7 L12 12" stroke="#3f3f46" stroke-width="1.5" fill="none"/></svg>
+                            <span class="font-mono text-sm">Extract Carbon</span>
+                        </span>
+                        <span class="text-xs opacity-50 font-mono">+1</span>
+                    </button>
+                    <button id="btn-gather-raw_silicon" onclick="manualGather('raw_silicon')" class="w-full btn-industrial rounded py-2 px-3 flex justify-between items-center text-cyan-400 has-tooltip hidden">
+                        <span class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" class="inline-block"><polygon points="12,3 19,10 12,21 5,10" fill="#082f49" stroke="#0ea5e9" stroke-width="1.5"/><polygon points="12,3 12,21 5,10" fill="#0c4a6e" opacity="0.7"/></svg>
+                            <span class="font-mono text-sm">Extract Silicon</span>
+                        </span>
+                        <span class="text-xs opacity-50 font-mono">+1</span>
+                    </button>
+                    <button id="btn-gather-raw_copper" onclick="manualGather('raw_copper')" class="w-full btn-industrial rounded py-2 px-3 flex justify-between items-center text-amber-500 has-tooltip hidden">
+                        <span class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" class="inline-block"><path d="M7 4 L17 4 L21 12 L17 20 L7 20 L3 12 Z" fill="#451a03" stroke="#d97706" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="2" fill="#f59e0b"/></svg>
+                            <span class="font-mono text-sm">Extract Copper</span>
+                        </span>
+                        <span class="text-xs opacity-50 font-mono">+1</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Inventory List -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <h2 class="text-xs uppercase text-zinc-500 tracking-wider mb-3 font-bold font-mono flex justify-between items-center">
+                    <span>Local Cache</span>
+                    <span id="storageCount" class="text-brand font-mono text-[11px]">0 Files</span>
+                </h2>
+                <div id="inventoryContainer" class="grid grid-cols-2 gap-1.5">
+                    <!-- Inventory items injected dynamically -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Main Area: Tabs & Content -->
+        <main class="flex-1 flex flex-col bg-zinc-950 relative overflow-hidden">
+            
+            <!-- Loading Overlay -->
+            <div id="loadingOverlay" class="absolute inset-0 bg-zinc-950/90 z-50 flex items-center justify-center backdrop-blur-sm">
+                <div class="text-center">
+                    <svg class="animate-spin h-10 w-10 text-brand mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <p class="text-brand font-mono tracking-widest text-sm">BOOTING ARCHITECTURE...</p>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <nav class="flex border-b border-zinc-800 bg-zinc-900 pt-2 px-2 shrink-0 overflow-x-auto whitespace-nowrap">
+                <button onclick="switchTab('fabrication')" id="tabBtn-fabrication" class="tab-btn tab-active px-4 py-2 rounded-t text-sm font-bold tracking-wide text-zinc-400 hover:text-zinc-200 transition-colors">FABRICATION</button>
+                <button onclick="switchTab('automation')" id="tabBtn-automation" class="tab-btn px-4 py-2 rounded-t text-sm font-bold tracking-wide text-zinc-400 hover:text-zinc-200 transition-colors">AUTOMATION</button>
+                <button onclick="switchTab('storage')" id="tabBtn-storage" class="tab-btn px-4 py-2 rounded-t text-sm font-bold tracking-wide text-zinc-400 hover:text-zinc-200 transition-colors">MEMORY</button>
+                <button onclick="switchTab('research')" id="tabBtn-research" class="tab-btn px-4 py-2 rounded-t text-sm font-bold tracking-wide text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2">
+                    RESEARCH
+                    <span id="techBadge" class="hidden bg-brand text-zinc-900 text-xs px-1.5 rounded-full font-bold">!</span>
+                </button>
+            </nav>
+
+            <!-- Permanently Anchored Crafting Queue -->
+            <div class="px-6 pt-4 shrink-0 select-none bg-zinc-950">
+                <div class="bg-zinc-900/90 border border-zinc-800 rounded-lg p-2.5 h-16 flex items-center overflow-x-auto shadow-inner relative">
+                    <div id="queueContainer" class="flex items-center gap-2 w-full">
+                        <div class="text-zinc-600 text-xs font-mono font-bold w-full text-center tracking-widest">COMPILE QUEUE IDLE</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content Area -->
+            <div class="flex-1 overflow-y-auto p-6 relative">
+                
+                <!-- FABRICATION TAB -->
+                <div id="tab-fabrication" class="tab-content h-full flex-col">
+                    <div id="noCraftingMsg" class="hidden flex-1 flex items-center justify-center text-zinc-600 font-mono text-center border-2 border-dashed border-zinc-800 rounded-lg p-10">No schematics loaded.</div>
+                    <div id="craftingContainer" class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 pb-10">
+                        <!-- Recipes injected here -->
+                    </div>
+                </div>
+
+                <!-- AUTOMATION TAB -->
+                <div id="tab-automation" class="tab-content hidden space-y-6">
+                    <div id="automationLockedMsg" class="text-center text-zinc-500 font-mono py-12 border-2 border-dashed border-zinc-800 rounded-lg bg-zinc-900/40">
+                        No automated subroutines discovered. Conduct research to develop architectures.
+                    </div>
+
+                    <!-- Miners Section -->
+                    <div id="minersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2">
+                            <h3 class="text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Thermal & Plasma Drills</h3>
+                            <div class="text-sm font-mono bg-zinc-950 px-3 py-1 rounded border border-zinc-800">
+                                Unassigned: <span id="unassignedMiners" class="text-crt">0</span> / <span id="totalMiners">0</span> <span class="text-zinc-500 ml-1 text-[10px] hidden sm:inline">(<span id="totalElectricMiners">0</span> Plasma)</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-zinc-400 mb-3 font-mono">Thermal Drills consume 1 Carbon per cycle (except when extracting Carbon). Plasma variants draw ambient power.</p>
+                        <div id="minersContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+                    </div>
+
+                    <!-- Furnaces Section -->
+                    <div id="furnacesSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2">
+                            <h3 class="text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Doping Kilns & Furnaces</h3>
+                            <div class="text-sm font-mono bg-zinc-950 px-3 py-1 rounded border border-zinc-800">
+                                Unassigned: <span id="unassignedFurnaces" class="text-crt">0</span> / <span id="totalFurnaces">0</span> <span class="text-zinc-500 ml-1 text-[10px] hidden sm:inline">(<span id="totalElectricFurnaces">0</span> Plasma)</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-zinc-400 mb-3 font-mono">Doping Kilns consume 1 Carbon per operation. Plasma Furnaces run without Carbon fuel.</p>
+                        <div id="furnacesContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+                    </div>
+
+                    <!-- Assemblers Section -->
+                    <div id="assemblersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2">
+                            <h3 class="text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Logic Fabricators</h3>
+                            <div class="text-sm font-mono bg-zinc-950 px-3 py-1 rounded border border-zinc-800">
+                                Unassigned: <span id="unassignedAssemblers" class="text-crt">0</span> / <span id="totalAssemblers">0</span>
+                            </div>
+                        </div>
+                        <div id="assemblersContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+                    </div>
+                </div>
+
+                <!-- STORAGE TAB -->
+                <div id="tab-storage" class="tab-content hidden space-y-6">
+                    <div id="storageLockedMsg" class="text-center text-zinc-500 font-mono py-12 border-2 border-dashed border-zinc-800 rounded-lg bg-zinc-900/40">
+                        Memory allocation not yet mapped.
+                    </div>
+
+                    <div id="storageSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-3 sm:p-5">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- RESEARCH TAB -->
+                <div id="tab-research" class="tab-content hidden">
+                    <div class="relative">
+                        <div id="researchContainer" class="space-y-2 max-w-3xl mx-auto pb-10">
+                            <!-- Tech nodes injected here -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 flex flex-col gap-2 z-[60] pointer-events-none"></div>
+
+    <!-- Global Floating Tooltip -->
+    <div id="globalTooltip" class="fixed pointer-events-none z-[100] hidden bg-zinc-900 border border-zinc-600 text-zinc-200 text-xs px-3 py-2 rounded shadow-2xl font-mono backdrop-blur-md whitespace-pre leading-relaxed"></div>
+
+    <!-- Modal Dialog -->
+    <div id="customModal" class="hidden fixed inset-0 bg-zinc-950/90 z-[60] flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-zinc-900 border border-zinc-700 p-6 rounded-lg shadow-2xl max-w-lg w-full mx-4 flex flex-col gap-4">
+            <h2 id="modalTitle" class="text-xl font-bold text-brand font-mono">Modal Title</h2>
+            <p id="modalDesc" class="text-sm text-zinc-300 font-mono">Description here.</p>
+            <textarea id="modalTextarea" class="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-brand font-mono text-xs h-32 focus:outline-none focus:border-brand" spellcheck="false"></textarea>
+            <div class="flex justify-end gap-3 mt-2 font-mono">
+                <button onclick="closeModal()" class="px-4 py-2 rounded text-sm font-bold text-zinc-400 hover:text-zinc-200 transition-colors">Abort</button>
+                <button id="modalActionBtn" class="btn-industrial px-4 py-2 rounded text-sm font-bold text-zinc-200">Execute</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Playtest Resource Spawner Modal -->
+    <div id="playtestModal" class="hidden fixed inset-0 bg-zinc-950/90 z-[70] flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-zinc-900 border border-zinc-700 p-5 rounded-lg shadow-2xl max-w-2xl w-full flex flex-col gap-4 max-h-[90vh]">
+            <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">_</span>
+                    <h2 class="text-lg font-bold text-brand font-mono tracking-wide">Developer Shell</h2>
+                </div>
+                <button onclick="closePlaytestModal()" class="text-zinc-400 hover:text-white text-lg font-bold px-2 py-0.5 rounded hover:bg-zinc-800 transition-colors font-mono">✕</button>
+            </div>
+            
+            <div class="bg-zinc-950 border border-zinc-800 p-3 rounded-lg flex flex-wrap items-center justify-between gap-3 font-mono">
+                <div class="flex items-center gap-2">
+                    <label for="playtestAmount" class="text-xs text-zinc-400 uppercase tracking-wider font-bold">Inject Amt:</label>
+                    <input id="playtestAmount" type="number" value="100" class="w-28 bg-zinc-900 border border-zinc-700 px-2.5 py-1 rounded text-brand font-bold text-sm focus:outline-none focus:border-brand" />
+                </div>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-xs text-zinc-500">Quick:</span>
+                    <button onclick="setPlaytestAmount(10)" class="px-2 py-0.5 text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-zinc-300 transition-colors">+10</button>
+                    <button onclick="setPlaytestAmount(100)" class="px-2 py-0.5 text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-zinc-300 transition-colors">+100</button>
+                    <button onclick="setPlaytestAmount(1000)" class="px-2 py-0.5 text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-zinc-300 transition-colors">+1k</button>
+                    <button onclick="setPlaytestAmount(10000)" class="px-2 py-0.5 text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-zinc-300 transition-colors">+10k</button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-1">
+                <div id="playtestItemsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-zinc-800 text-xs font-mono">
+                <button onclick="playtestAddAll()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-3 py-1.5 rounded transition-colors">
+                    + Inject All
+                </button>
+                <button onclick="closePlaytestModal()" class="btn-industrial px-4 py-1.5 rounded font-bold text-zinc-200">
+                    Exit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- PROGRESSIVE WEB APP (PWA) INITIALIZATION ---
+        (function initPWA() {
+            const svgIcon = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>');
+            const manifest = {
+                name: "Hypostrate",
+                short_name: "Hypostrate",
+                description: "An offline-capable incremental reality simulation game.",
+                start_url: window.location.href.split('?')[0].split('#')[0],
+                display: "standalone",
+                background_color: "#09090b",
+                theme_color: "#09090b",
+                icons: [{
+                    src: "data:image/svg+xml;charset=utf-8," + svgIcon,
+                    sizes: "192x192 512x512",
+                    type: "image/svg+xml",
+                    purpose: "any maskable"
+                }]
+            };
+            const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = URL.createObjectURL(manifestBlob);
+            document.head.appendChild(link);
+        })();
+
+        /* Database Definitions */
+        const ITEMS = {
+            carbon: { name: 'Carbon Fragment', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><path d="M12 2 L20 7 L20 17 L12 22 L4 17 L4 7 Z" fill="#18181b" stroke="#52525b" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 2 L12 12 M4 7 L12 12 M20 7 L12 12" stroke="#3f3f46" stroke-width="1.5" fill="none"/></svg>', type: 'raw', color: 'text-zinc-400', time: 500 },
+            raw_silicon: { name: 'Raw Silicon', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><polygon points="12,3 19,10 12,21 5,10" fill="#082f49" stroke="#0ea5e9" stroke-width="1.5"/><polygon points="12,3 12,21 5,10" fill="#0c4a6e" opacity="0.7"/></svg>', type: 'raw', color: 'text-cyan-400', time: 500 },
+            raw_copper: { name: 'Raw Copper', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><path d="M7 4 L17 4 L21 12 L17 20 L7 20 L3 12 Z" fill="#451a03" stroke="#d97706" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="2" fill="#f59e0b"/></svg>', type: 'raw', color: 'text-amber-500', time: 500 },
+            
+            silicon_wafer: { name: 'Silicon Wafer', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><circle cx="12" cy="12" r="9" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/><path d="M6 12h12M12 6v12M8 8l8 8M8 16l8-8" stroke="#0284c7" stroke-width="1" opacity="0.5"/></svg>', type: 'intermediate', color: 'text-cyan-300', cost: { raw_silicon: 2 }, time: 1000 },
+            copper_trace: { name: 'Copper Trace', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="3" y="4" width="18" height="16" fill="#064e3b" rx="2" stroke="#047857" stroke-width="1"/><path d="M5 8h4v8h6M15 8h4M5 16h4" stroke="#f59e0b" stroke-width="1.5" fill="none"/><circle cx="9" cy="8" r="1.5" fill="#d97706"/><circle cx="15" cy="16" r="1.5" fill="#d97706"/></svg>', type: 'intermediate', color: 'text-amber-400', cost: { raw_copper: 2 }, time: 1000 },
+            superconductor: { name: 'Superconductor', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="5" y="5" width="14" height="14" fill="#1e1b4b" stroke="#8b5cf6" stroke-width="2" rx="3"/><circle cx="12" cy="12" r="3" fill="#c084fc"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#a855f7" stroke-width="1.5"/></svg>', type: 'intermediate', color: 'text-purple-400', cost: { silicon_wafer: 5 }, time: 2500 },
+            
+            logic_gate: { name: 'Logic Gate (AND/OR)', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><path d="M4 4h6c6 0 10 4 10 8s-4 8-10 8H4V4z" fill="#09090b" stroke="#10b981" stroke-width="2"/><line x1="1" y1="9" x2="4" y2="9" stroke="#10b981" stroke-width="2"/><line x1="1" y1="15" x2="4" y2="15" stroke="#10b981" stroke-width="2"/><line x1="20" y1="12" x2="23" y2="12" stroke="#10b981" stroke-width="2"/></svg>', type: 'intermediate', color: 'text-emerald-400', cost: { silicon_wafer: 2 }, time: 500 },
+            bonding_wire: { name: 'Gold Bonding Wire', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><path d="M4 12 Q8 4 12 12 T20 12" fill="none" stroke="#fcd34d" stroke-width="2"/><rect x="2" y="10" width="4" height="4" fill="#b45309"/><rect x="18" y="10" width="4" height="4" fill="#b45309"/></svg>', type: 'intermediate', color: 'text-yellow-300', cost: { copper_trace: 1 }, yield: 2, time: 500 },
+            
+            microchip: { name: 'Microchip', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="6" y="6" width="12" height="12" fill="#18181b" stroke="#3f3f46" stroke-width="2" rx="1"/><line x1="8" y1="3" x2="8" y2="6" stroke="#94a3b8" stroke-width="1.5"/><line x1="12" y1="3" x2="12" y2="6" stroke="#94a3b8" stroke-width="1.5"/><line x1="16" y1="3" x2="16" y2="6" stroke="#94a3b8" stroke-width="1.5"/><line x1="8" y1="18" x2="8" y2="21" stroke="#94a3b8" stroke-width="1.5"/><line x1="12" y1="18" x2="12" y2="21" stroke="#94a3b8" stroke-width="1.5"/><line x1="16" y1="18" x2="16" y2="21" stroke="#94a3b8" stroke-width="1.5"/><line x1="3" y1="8" x2="6" y2="8" stroke="#94a3b8" stroke-width="1.5"/><line x1="3" y1="12" x2="6" y2="12" stroke="#94a3b8" stroke-width="1.5"/><line x1="3" y1="16" x2="6" y2="16" stroke="#94a3b8" stroke-width="1.5"/><line x1="18" y1="8" x2="21" y2="8" stroke="#94a3b8" stroke-width="1.5"/><line x1="18" y1="12" x2="21" y2="12" stroke="#94a3b8" stroke-width="1.5"/><line x1="18" y1="16" x2="21" y2="16" stroke="#94a3b8" stroke-width="1.5"/></svg>', type: 'advanced', color: 'text-zinc-300', cost: { silicon_wafer: 1, bonding_wire: 3 }, time: 1500 },
+            
+            binary_data: { name: 'Binary Heuristic', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="4" y="4" width="16" height="16" fill="#18181b" stroke="#ec4899" stroke-width="2" rx="1"/><text x="12" y="15" fill="#f472b6" font-family="monospace" font-size="10" font-weight="bold" text-anchor="middle">01</text></svg>', type: 'science', color: 'text-pink-400', cost: { copper_trace: 1, logic_gate: 1 }, time: 2000 },
+            neural_data: { name: 'Neural Algorithm', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><circle cx="12" cy="6" r="3" fill="#2dd4bf"/><circle cx="6" cy="16" r="3" fill="#2dd4bf"/><circle cx="18" cy="16" r="3" fill="#2dd4bf"/><line x1="10.5" y1="8.5" x2="7.5" y2="13.5" stroke="#14b8a6" stroke-width="1.5"/><line x1="13.5" y1="8.5" x2="16.5" y2="13.5" stroke="#14b8a6" stroke-width="1.5"/><line x1="8.5" y1="16" x2="15.5" y2="16" stroke="#14b8a6" stroke-width="1.5"/></svg>', type: 'science', color: 'text-teal-400', cost: { microchip: 1, silicon_wafer: 2 }, time: 3000 },
+            
+            data_reel: { name: 'Magnetic Data Reel', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><circle cx="12" cy="12" r="10" fill="#27272a" stroke="#52525b" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="#09090b"/><circle cx="7" cy="12" r="2" fill="#09090b"/><circle cx="17" cy="12" r="2" fill="#09090b"/><circle cx="12" cy="7" r="2" fill="#09090b"/><circle cx="12" cy="17" r="2" fill="#09090b"/></svg>', type: 'storage', color: 'text-zinc-400', cost: { silicon_wafer: 10, logic_gate: 5 }, time: 2000 },
+            server_rack: { name: 'Server Rack', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="4" y="2" width="16" height="20" rx="1" fill="#09090b" stroke="#3b82f6" stroke-width="2"/><line x1="4" y1="8" x2="20" y2="8" stroke="#1e3a8a" stroke-width="2"/><line x1="4" y1="16" x2="20" y2="16" stroke="#1e3a8a" stroke-width="2"/><circle cx="8" cy="5" r="1" fill="#10b981"/><circle cx="8" cy="12" r="1" fill="#10b981"/><circle cx="8" cy="19" r="1" fill="#f59e0b"/></svg>', type: 'storage', color: 'text-blue-400', cost: { superconductor: 10, logic_gate: 10 }, time: 4000 },
+
+            doping_kiln: { name: 'Doping Kiln', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="3" y="4" width="18" height="16" rx="2" fill="#27272a" stroke="#f59e0b" stroke-width="1.5"/><rect x="6" y="8" width="12" height="8" rx="1" fill="#18181b" stroke="#b45309" stroke-width="1"/><path d="M9 16v-4c0-1 6-1 6 0v4" fill="#f59e0b" opacity="0.6"/></svg>', type: 'machine', color: 'text-amber-500', cost: { silicon_wafer: 15, copper_trace: 5, carbon: 15 }, time: 3000 },
+            plasma_furnace: { name: 'Plasma Furnace', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="3" y="4" width="18" height="16" rx="2" fill="#09090b" stroke="#0ea5e9" stroke-width="1.5"/><rect x="6" y="8" width="12" height="8" rx="1" fill="#082f49" stroke="#0284c7" stroke-width="1"/><path d="M9 16v-4c0-1 6-1 6 0v4" fill="#38bdf8" opacity="0.8"/></svg>', type: 'machine', color: 'text-sky-400', cost: { superconductor: 15, microchip: 15, logic_gate: 10 }, time: 6000 },
+            thermal_drill: { name: 'Thermal Drill', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="8" y="2" width="8" height="6" fill="#3f3f46" rx="1"/><polygon points="9,8 15,8 12,22" fill="#f59e0b"/><line x1="12" y1="8" x2="12" y2="20" stroke="#b45309" stroke-width="1"/></svg>', type: 'machine', color: 'text-amber-400', cost: { silicon_wafer: 15, copper_trace: 10, carbon: 10 }, time: 5000 },
+            plasma_drill: { name: 'Plasma Drill', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="8" y="2" width="8" height="6" fill="#18181b" rx="1" stroke="#0ea5e9" stroke-width="1"/><polygon points="10,8 14,8 12,22" fill="#38bdf8"/><line x1="8" y1="12" x2="16" y2="12" stroke="#0284c7" stroke-width="1"/><line x1="9" y1="16" x2="15" y2="16" stroke="#0284c7" stroke-width="1"/></svg>', type: 'machine', color: 'text-sky-400', cost: { silicon_wafer: 20, microchip: 10, logic_gate: 10 }, time: 6000 },
+            logic_fab: { name: 'Logic Fabricator', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><path d="M4 14 h16 v6 a2 2 0 0 1 -2 2 h-12 a2 2 0 0 1 -2 -2 z" fill="#18181b" stroke="#10b981" stroke-width="1.5"/><path d="M12 14 V7 L16 4" stroke="#d4d4d8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="14" r="2" fill="#27272a"/><circle cx="16" cy="4" r="1.5" fill="#10b981"/></svg>', type: 'machine', color: 'text-emerald-400', cost: { silicon_wafer: 25, logic_gate: 15, bonding_wire: 20 }, time: 5000 }
+        };
+
+        const TECH_TREE = {
+            purification: {
+                id: 'purification', name: 'Wafer Purification', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><circle cx="12" cy="12" r="9" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/></svg>',
+                desc: 'Purify raw silicon into clean, workable wafers for circuitry.',
+                cost: { carbon: 10, raw_silicon: 10, raw_copper: 10 },
+                req: [],
+                unlocks: ['silicon_wafer', 'copper_trace']
+            },
+            automated_extraction: {
+                id: 'automated_extraction', name: 'Automated Extraction', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><polygon points="9,8 15,8 12,22" fill="#f59e0b"/></svg>',
+                desc: 'Construct mechanical thermal drills to pull raw materials continuously.',
+                cost: { silicon_wafer: 15, copper_trace: 10 },
+                req: ['purification'],
+                unlocks: ['thermal_drill']
+            },
+            automated_doping: {
+                id: 'automated_doping', name: 'Automated Doping', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="3" y="4" width="18" height="16" rx="2" fill="#27272a" stroke="#f59e0b" stroke-width="1.5"/></svg>',
+                desc: 'Build dedicated kilns to process raw materials into traces and wafers.',
+                cost: { silicon_wafer: 30, copper_trace: 20, carbon: 30 },
+                req: ['automated_extraction'],
+                unlocks: ['doping_kiln']
+            },
+            logic_fundamentals: {
+                id: 'logic_fundamentals', name: 'Logic Fundamentals', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><path d="M4 4h6c6 0 10 4 10 8s-4 8-10 8H4V4z" fill="#09090b" stroke="#10b981" stroke-width="2"/></svg>',
+                desc: 'Etch simple AND/OR gates and spool fine bonding wire.',
+                cost: { silicon_wafer: 40, copper_trace: 40 },
+                req: ['automated_doping'],
+                unlocks: ['logic_gate', 'bonding_wire', 'binary_data']
+            },
+            fabrication: {
+                id: 'fabrication', name: 'Component Fabrication', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><path d="M4 14 h16 v6 a2 2 0 0 1 -2 2 h-12 a2 2 0 0 1 -2 -2 z" fill="#18181b" stroke="#10b981" stroke-width="1.5"/></svg>',
+                desc: 'Automate the assembly of complex logic components.',
+                cost: { binary_data: 20 },
+                req: ['logic_fundamentals'],
+                unlocks: ['logic_fab']
+            },
+            data_storage: {
+                id: 'data_storage', name: 'Data Formatting', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><circle cx="12" cy="12" r="10" fill="#27272a" stroke="#52525b" stroke-width="2"/></svg>',
+                desc: 'Manufacture magnetic tape reels to vastly expand memory buffer.',
+                cost: { binary_data: 25 },
+                req: ['logic_fundamentals'],
+                unlocks: ['data_reel']
+            },
+            integrated_circuits: {
+                id: 'integrated_circuits', name: 'Integrated Circuits', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="6" y="6" width="12" height="12" fill="#18181b" stroke="#3f3f46" stroke-width="2" rx="1"/></svg>',
+                desc: 'Print microchips capable of running higher-tier processes.',
+                cost: { binary_data: 30 },
+                req: ['logic_fundamentals'],
+                unlocks: ['microchip']
+            },
+            plasma_tech: {
+                id: 'plasma_tech', name: 'Plasma Operations', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><polygon points="10,8 14,8 12,22" fill="#38bdf8"/></svg>',
+                desc: 'Harness ambient power to run advanced, carbon-free extraction drills.',
+                cost: { binary_data: 40, microchip: 20 },
+                req: ['integrated_circuits'],
+                unlocks: ['plasma_drill']
+            },
+            heuristic_algorithms: {
+                id: 'heuristic_algorithms', name: 'Heuristic Algorithms', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><circle cx="12" cy="6" r="3" fill="#2dd4bf"/></svg>',
+                desc: 'Map neural networks to solve complex architectural hurdles.',
+                cost: { binary_data: 50, microchip: 25 },
+                req: ['integrated_circuits'],
+                unlocks: ['neural_data']
+            },
+            superconductivity: {
+                id: 'superconductivity', name: 'Superconductivity', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="5" y="5" width="14" height="14" fill="#1e1b4b" stroke="#8b5cf6" stroke-width="2" rx="3"/></svg>',
+                desc: 'Stack silicon wafers into frictionless superconducting cores.',
+                cost: { binary_data: 40, neural_data: 15 },
+                req: ['heuristic_algorithms'],
+                unlocks: ['superconductor']
+            },
+            plasma_doping: {
+                id: 'plasma_doping', name: 'Plasma Doping', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="3" y="4" width="18" height="16" rx="2" fill="#09090b" stroke="#0ea5e9" stroke-width="1.5"/></svg>',
+                desc: 'Upgrade kilns to use plasma, removing carbon dependency entirely.',
+                cost: { binary_data: 50, neural_data: 20 },
+                req: ['plasma_tech', 'superconductivity'],
+                unlocks: ['plasma_furnace']
+            },
+            server_architecture: {
+                id: 'server_architecture', name: 'Server Architecture', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="inline-block"><rect x="4" y="2" width="16" height="20" rx="1" fill="#09090b" stroke="#3b82f6" stroke-width="2"/></svg>',
+                desc: 'Deploy massive server racks for immense data allocation scaling.',
+                cost: { binary_data: 60, neural_data: 40 },
+                req: ['data_storage', 'heuristic_algorithms', 'superconductivity'],
+                unlocks: ['server_rack']
+            }
+        };
+
+        const CRAFTING_ORDER = ['silicon_wafer', 'copper_trace', 'superconductor', 'logic_gate', 'bonding_wire', 'microchip', 'binary_data', 'neural_data', 'doping_kiln', 'plasma_furnace', 'thermal_drill', 'plasma_drill', 'logic_fab', 'data_reel', 'server_rack'];
+        const RAW_RESOURCES = ['carbon', 'raw_silicon', 'raw_copper'];
+        const SMELTING_RECIPES = ['silicon_wafer', 'copper_trace', 'superconductor'];
+
+        let state = {
+            inventory: {},
+            unlockedTechs: [],
+            unlockedRecipes: [],
+            minersAssigned: {},
+            furnacesAssigned: {},
+            assemblersAssigned: {},
+            reelsAssigned: {},
+            racksAssigned: {},
+            craftingQueue: [],
+            machineProgress: {}
+        };
+
+        function getItemAmount(id) {
+            return (state.inventory && state.inventory[id]) || 0;
+        }
+
+        function getMaxStorage(id) {
+            if (!id) return 100;
+            let reelAssigned = (state.reelsAssigned && state.reelsAssigned[id]) || 0;
+            let rackAssigned = (state.racksAssigned && state.racksAssigned[id]) || 0;
+            return 100 + (reelAssigned * 250) + (rackAssigned * 1000);
+        }
+
+        function getQueuedAmount(id) {
+            if (!state.craftingQueue) return 0;
+            return state.craftingQueue.filter(q => q.id === id).length * (ITEMS[id].yield || 1);
+        }
+
+        function canAfford(costObj, multiplier = 1) {
+            if (!costObj) return true;
+            for (let [id, amount] of Object.entries(costObj)) {
+                if (getItemAmount(id) < (amount * multiplier)) return false;
+            }
+            return true;
+        }
+
+        function deductCost(costObj, multiplier = 1) {
+            for (let [id, amount] of Object.entries(costObj)) {
+                state.inventory[id] = (state.inventory[id] || 0) - (amount * multiplier);
+            }
+        }
+
+        function isItemVisible(itemId) {
+            if (getItemAmount(itemId) > 0) return true;
+            
+            if (state.unlockedRecipes && state.unlockedRecipes.includes(itemId)) return true;
+            
+            if (state.unlockedRecipes) {
+                for (let rId of state.unlockedRecipes) {
+                    let recipe = ITEMS[rId];
+                    if (recipe && recipe.cost && recipe.cost[itemId]) return true;
+                }
+            }
+            
+            for (let [techId, tech] of Object.entries(TECH_TREE)) {
+                let reqMet = tech.req.every(r => state.unlockedTechs && state.unlockedTechs.includes(r));
+                let isUnlocked = state.unlockedTechs && state.unlockedTechs.includes(techId);
+                if (reqMet || isUnlocked) {
+                    if (tech.cost && tech.cost[itemId]) return true;
+                }
+            }
+            
+            return false;
+        }
+
+        function getTotalAssigned(assignmentObj) {
+            return Object.values(assignmentObj || {}).reduce((a, b) => a + b, 0);
+        }
+
+        window.openModal = function(title, desc, actionText, actionCallback, isReadonly = false, initialText = "") {
+            const modal = document.getElementById('customModal');
+            modal.classList.remove('hidden');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalDesc').innerText = desc;
+            
+            const textarea = document.getElementById('modalTextarea');
+            textarea.value = initialText;
+            textarea.readOnly = isReadonly;
+
+            const actionBtn = document.getElementById('modalActionBtn');
+            actionBtn.innerText = actionText;
+            actionBtn.onclick = () => actionCallback(textarea.value);
+        };
+
+        window.closeModal = function() {
+            document.getElementById('customModal').classList.add('hidden');
+            document.getElementById('modalTextarea').value = "";
+        };
+
+        window.openPlaytestModal = function() {
+            const modal = document.getElementById('playtestModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                renderPlaytestItems();
+            }
+        };
+
+        window.closePlaytestModal = function() {
+            const modal = document.getElementById('playtestModal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.setPlaytestAmount = function(amt) {
+            const input = document.getElementById('playtestAmount');
+            if (input) input.value = amt;
+        };
+
+        function renderPlaytestItems() {
+            const grid = document.getElementById('playtestItemsGrid');
+            if (!grid) return;
+            grid.innerHTML = Object.entries(ITEMS).map(([id, item]) => {
+                const current = getItemAmount(id);
+                return `
+                    <button onclick="playtestAddItem('${id}')" class="bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-brand/50 p-2.5 rounded-lg flex flex-col justify-between gap-2 transition-all text-left group">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="text-xl ${item.color}">${item.icon}</span>
+                            <span class="text-[10px] font-mono text-brand font-bold group-hover:underline">+Add</span>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-zinc-200 truncate">${item.name}</div>
+                            <div class="text-[10px] font-mono text-zinc-500">Cache: <span class="text-zinc-300 font-semibold">${formatNumber(current)}</span></div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        window.playtestAddItem = function(itemId) {
+            const input = document.getElementById('playtestAmount');
+            const amount = parseInt(input ? input.value : 100, 10) || 0;
+            if (amount === 0) return;
+
+            const current = state.inventory[itemId] || 0;
+            state.inventory[itemId] = Math.max(0, current + amount);
+
+            updateUI();
+            renderPlaytestItems();
+            showToast(`${amount > 0 ? '+' : ''}${formatNumber(amount)} ${ITEMS[itemId].name}`, "info");
+        };
+
+        window.playtestAddAll = function() {
+            const input = document.getElementById('playtestAmount');
+            const amount = parseInt(input ? input.value : 100, 10) || 0;
+            if (amount === 0) return;
+
+            Object.keys(ITEMS).forEach(id => {
+                const current = state.inventory[id] || 0;
+                state.inventory[id] = Math.max(0, current + amount);
+            });
+
+            updateUI();
+            renderPlaytestItems();
+            showToast(`${amount > 0 ? '+' : ''}${formatNumber(amount)} to all clusters`, "info");
+        };
+
+        window.exportSave = function() {
+            try {
+                const saveData = JSON.stringify(state);
+                const encodedData = btoa(unescape(encodeURIComponent(saveData)));
+                openModal("Export Save State", "Copy the hash below to transfer your architecture state.", "Copy to Clipboard", () => {
+                    const textarea = document.getElementById('modalTextarea');
+                    textarea.select();
+                    document.execCommand('copy');
+                    showToast("Copied to clipboard!", "success");
+                    closeModal();
+                }, true, encodedData);
+            } catch (e) {
+                showToast("Failed to compile save state.", "error");
+            }
+        };
+
+        window.importSave = function() {
+            openModal("Import Save State", "Paste your architecture hash below. Warning: Overwrites current run!", "Load State", (text) => {
+                if (!text || !text.trim()) {
+                    showToast("No hash entered.", "error");
+                    return;
+                }
+                try {
+                    const decodedData = decodeURIComponent(escape(atob(text.trim())));
+                    const parsedState = JSON.parse(decodedData);
+                    if (parsedState && typeof parsedState === 'object') {
+                        state = Object.assign({
+                            inventory: {}, unlockedTechs: [], unlockedRecipes: [],
+                            minersAssigned: {}, furnacesAssigned: {}, assemblersAssigned: {},
+                            reelsAssigned: {}, racksAssigned: {},
+                            craftingQueue: [], machineProgress: {}
+                        }, parsedState);
+                        
+                        // Compatibility for older imports (if they had logic fabs doing doping)
+                        if (state.assemblersAssigned) {
+                            SMELTING_RECIPES.forEach(recipe => {
+                                if (state.assemblersAssigned[recipe]) {
+                                    state.furnacesAssigned[recipe] = (state.furnacesAssigned[recipe] || 0) + state.assemblersAssigned[recipe];
+                                    state.assemblersAssigned[recipe] = 0;
+                                }
+                            });
+                        }
+
+                        updateUI();
+                        showToast("State loaded successfully!", "success");
+                        closeModal();
+                    }
+                } catch (e) {
+                    showToast("Invalid architecture hash.", "error");
+                }
+            }, false, "");
+        };
+
+        window.manualGather = function(resId) {
+            if (getItemAmount(resId) + getQueuedAmount(resId) + 1 > getMaxStorage(resId)) {
+                showToast("Memory cap reached!", "error");
+                return;
+            }
+            const item = ITEMS[resId];
+            if (!state.craftingQueue) state.craftingQueue = [];
+            state.craftingQueue.push({
+                id: resId,
+                timeLeft: item.time || 500,
+                totalTime: item.time || 500
+            });
+            updateUI();
+        };
+
+        window.craftItem = function(itemId, count = 1) {
+            const item = ITEMS[itemId];
+            const yieldAmt = item.yield || 1;
+            let crafted = 0;
+            
+            for (let i = 0; i < count; i++) {
+                if (getItemAmount(itemId) + getQueuedAmount(itemId) + yieldAmt > getMaxStorage(itemId)) {
+                    if (i === 0) showToast("Memory cap reached!", "error");
+                    break;
+                }
+
+                if (canAfford(item.cost)) {
+                    deductCost(item.cost);
+                    if (!state.craftingQueue) state.craftingQueue = [];
+                    state.craftingQueue.push({
+                        id: itemId,
+                        timeLeft: item.time || 1000,
+                        totalTime: item.time || 1000
+                    });
+                    crafted++;
+                } else {
+                    if (i === 0) showToast("Insufficient dependencies!", "error");
+                    break;
+                }
+            }
+            if (crafted > 0) updateUI();
+        };
+
+        window.cancelQueueItem = function(index) {
+            if (!state.craftingQueue || index < 0 || index >= state.craftingQueue.length) return;
+            const itemToRemove = state.craftingQueue[index];
+            const itemDef = ITEMS[itemToRemove.id];
+            
+            if (itemDef.cost) {
+                for (let [id, amount] of Object.entries(itemDef.cost)) {
+                    state.inventory[id] = (state.inventory[id] || 0) + amount;
+                }
+            }
+            
+            state.craftingQueue.splice(index, 1);
+            updateUI();
+        };
+
+        window.researchTech = function(techId) {
+            const tech = TECH_TREE[techId];
+            if (!tech || state.unlockedTechs.includes(techId)) return;
+            
+            if (canAfford(tech.cost)) {
+                deductCost(tech.cost);
+                state.unlockedTechs.push(techId);
+                
+                if (tech.unlocks) {
+                    tech.unlocks.forEach(u => {
+                        if (!state.unlockedRecipes.includes(u)) {
+                            state.unlockedRecipes.push(u);
+                        }
+                    });
+                }
+                
+                showToast(`Compiled: ${tech.name}`, "success");
+                updateUI();
+            } else {
+                showToast("Insufficient data for compilation.", "error");
+            }
+        };
+
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('tab-active'));
+            
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tabBtn-${tabName}`).classList.add('tab-active');
+            
+            if(tabName === 'research') document.getElementById('techBadge').classList.add('hidden');
+        };
+
+        window.adjustMiner = function(resId, delta) {
+            const currentTotal = getTotalAssigned(state.minersAssigned);
+            const maxMiners = getItemAmount('thermal_drill') + getItemAmount('plasma_drill');
+            const currentAssigned = (state.minersAssigned && state.minersAssigned[resId]) || 0;
+
+            if (delta > 0 && currentTotal >= maxMiners) {
+                showToast("No available Drills. Fabricate more!", "error");
+                return;
+            }
+            if (delta < 0 && currentAssigned <= 0) return;
+
+            if (!state.minersAssigned) state.minersAssigned = {};
+            state.minersAssigned[resId] = currentAssigned + delta;
+            updateUI();
+        };
+
+        window.adjustFurnace = function(recipeId, delta) {
+            const currentTotal = getTotalAssigned(state.furnacesAssigned);
+            const maxFurnaces = getItemAmount('doping_kiln') + getItemAmount('plasma_furnace');
+            const currentAssigned = (state.furnacesAssigned && state.furnacesAssigned[recipeId]) || 0;
+
+            if (delta > 0 && currentTotal >= maxFurnaces) {
+                showToast("No available Kilns/Furnaces. Fabricate more!", "error");
+                return;
+            }
+            if (delta < 0 && currentAssigned <= 0) return;
+
+            if (!state.furnacesAssigned) state.furnacesAssigned = {};
+            state.furnacesAssigned[recipeId] = currentAssigned + delta;
+            updateUI();
+        };
+
+        window.adjustAssembler = function(recipeId, delta) {
+            const currentTotal = getTotalAssigned(state.assemblersAssigned);
+            const maxAssemblers = getItemAmount('logic_fab');
+            const currentAssigned = (state.assemblersAssigned && state.assemblersAssigned[recipeId]) || 0;
+
+            if (delta > 0 && currentTotal >= maxAssemblers) {
+                showToast("No available Logic Fabricators. Fabricate more!", "error");
+                return;
+            }
+            if (delta < 0 && currentAssigned <= 0) return;
+
+            if (!state.assemblersAssigned) state.assemblersAssigned = {};
+            state.assemblersAssigned[recipeId] = currentAssigned + delta;
+            updateUI();
+        };
+
+        window.installChest = function(itemId, chestType) {
+            if (chestType === 'reel') {
+                if (getItemAmount('data_reel') >= 1) {
+                    state.inventory['data_reel'] -= 1;
+                    if (!state.reelsAssigned) state.reelsAssigned = {};
+                    state.reelsAssigned[itemId] = (state.reelsAssigned[itemId] || 0) + 1;
+                } else {
+                    showToast("Not enough Data Reels in inventory.", "error");
+                }
+            } else if (chestType === 'rack') {
+                if (getItemAmount('server_rack') >= 1) {
+                    if ((state.reelsAssigned[itemId] || 0) >= 1) {
+                        state.inventory['server_rack'] -= 1;
+                        state.reelsAssigned[itemId] -= 1;
+                        if (!state.racksAssigned) state.racksAssigned = {};
+                        state.racksAssigned[itemId] = (state.racksAssigned[itemId] || 0) + 1;
+                    } else {
+                        showToast("Need an installed Data Reel to upgrade!", "error");
+                    }
+                } else {
+                    showToast("Not enough Server Racks in inventory.", "error");
+                }
+            }
+            updateUI();
+        };
+
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            updateGlobalTooltip(e.target);
+        });
+        
+        document.addEventListener('touchstart', (e) => {
+            if(e.touches.length > 0) {
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+                updateGlobalTooltip(e.target);
+            }
+        });
+
+        window.updateGlobalTooltip = function(targetElement) {
+            const tooltip = document.getElementById('globalTooltip');
+            if (!tooltip) return;
+            
+            let target = targetElement && targetElement.closest ? targetElement.closest('.has-tooltip') : null;
+            if(!target && document.elementFromPoint) {
+                let hovered = document.elementFromPoint(lastMouseX, lastMouseY);
+                target = hovered ? hovered.closest('.has-tooltip') : null;
+            }
+
+            if (target && target.dataset.tip) {
+                tooltip.innerHTML = target.dataset.tip.replace(/&#10;/g, '<br>').replace(/\n/g, '<br>');
+                tooltip.classList.remove('hidden');
+                
+                let left = lastMouseX + 16;
+                let top = lastMouseY + 16;
+                const rect = tooltip.getBoundingClientRect();
+                
+                if (left + rect.width > window.innerWidth - 12) left = window.innerWidth - rect.width - 12;
+                if (top + rect.height > window.innerHeight - 12) top = lastMouseY - rect.height - 16;
+                
+                tooltip.style.left = `${left}px`;
+                tooltip.style.top = `${top}px`;
+            } else {
+                tooltip.classList.add('hidden');
+            }
+        };
+
+        function gameTick() {
+            let stateChanged = false;
+            if (!state.machineProgress) state.machineProgress = {};
+
+            // 1. Process Extraction Drills
+            let totalElectricMiners = getItemAmount('plasma_drill');
+            let availableElectricMiners = totalElectricMiners;
+
+            if (state.minersAssigned) {
+                for (let [resId, count] of Object.entries(state.minersAssigned)) {
+                    if (count > 0) {
+                        let electricUsed = Math.min(count, availableElectricMiners);
+                        let basicUsed = count - electricUsed;
+                        availableElectricMiners -= electricUsed;
+
+                        let item = ITEMS[resId];
+                        let craftTime = item.time || 1000;
+                        state.machineProgress[resId] = (state.machineProgress[resId] || 0) + (count * 1000);
+                        
+                        let maxCrafts = Math.floor(state.machineProgress[resId] / craftTime);
+                        
+                        if (maxCrafts > 0) {
+                            let electricRatio = count > 0 ? (electricUsed / count) : 0;
+                            let freeCrafts = Math.round(maxCrafts * electricRatio);
+                            let basicCrafts = maxCrafts - freeCrafts;
+                            
+                            if (resId !== 'carbon') {
+                                let availableCoal = getItemAmount('carbon');
+                                if (basicCrafts > availableCoal) basicCrafts = availableCoal;
+                            }
+                            
+                            let totalPossibleCrafts = freeCrafts + basicCrafts;
+
+                            let space = getMaxStorage(resId) - getItemAmount(resId);
+                            if (space < 0) space = 0;
+                            
+                            let actualCrafts = Math.min(totalPossibleCrafts, space);
+
+                            if (actualCrafts > 0) {
+                                let actualFree = Math.round(actualCrafts * electricRatio);
+                                let actualBasic = actualCrafts - actualFree;
+                                
+                                if (resId !== 'carbon') {
+                                    state.inventory['carbon'] -= actualBasic;
+                                }
+                                state.inventory[resId] = getItemAmount(resId) + actualCrafts;
+                                state.machineProgress[resId] -= (actualCrafts * craftTime);
+                                stateChanged = true;
+                            } else if (state.machineProgress[resId] > craftTime) {
+                                state.machineProgress[resId] = craftTime;
+                            }
+                        }
+                    } else {
+                        state.machineProgress[resId] = 0;
+                    }
+                }
+            }
+
+            // 1.5 Process Furnaces/Kilns
+            let totalElectricFurnaces = getItemAmount('plasma_furnace');
+            let availableElectricFurnaces = totalElectricFurnaces;
+
+            if (state.furnacesAssigned) {
+                for (let recipeId of SMELTING_RECIPES) {
+                    let count = state.furnacesAssigned[recipeId] || 0;
+                    if (count > 0) {
+                        let electricUsed = Math.min(count, availableElectricFurnaces);
+                        let basicUsed = count - electricUsed;
+                        availableElectricFurnaces -= electricUsed;
+
+                        let item = ITEMS[recipeId];
+                        let craftTime = item.time || 1000;
+                        state.machineProgress[recipeId] = (state.machineProgress[recipeId] || 0) + (count * 1000);
+                        
+                        let maxCrafts = Math.floor(state.machineProgress[recipeId] / craftTime);
+                        
+                        if (maxCrafts > 0) {
+                            let electricRatio = count > 0 ? (electricUsed / count) : 0;
+                            let freeCrafts = Math.round(maxCrafts * electricRatio);
+                            let basicCrafts = maxCrafts - freeCrafts;
+
+                            if (item.cost) {
+                                for (let [ingrId, requiredAmount] of Object.entries(item.cost)) {
+                                    let available = getItemAmount(ingrId);
+                                    let possible = Math.floor(available / requiredAmount);
+                                    if (possible < maxCrafts) {
+                                        maxCrafts = possible;
+                                    }
+                                }
+                            }
+
+                            freeCrafts = Math.round(maxCrafts * electricRatio);
+                            basicCrafts = maxCrafts - freeCrafts;
+
+                            let availableCoal = getItemAmount('carbon');
+                            if (basicCrafts > availableCoal) {
+                                basicCrafts = availableCoal;
+                            }
+
+                            let totalPossibleCrafts = freeCrafts + basicCrafts;
+
+                            let space = getMaxStorage(recipeId) - getItemAmount(recipeId);
+                            if (space < 0) space = 0;
+                            let yieldAmt = item.yield || 1;
+                            let maxFits = Math.floor(space / yieldAmt);
+                            
+                            let actualCrafts = Math.min(totalPossibleCrafts, maxFits);
+
+                            if (actualCrafts > 0) {
+                                let actualFree = Math.round(actualCrafts * electricRatio);
+                                let actualBasic = actualCrafts - actualFree;
+
+                                deductCost(item.cost, actualCrafts);
+                                state.inventory['carbon'] -= actualBasic; 
+                                state.inventory[recipeId] = getItemAmount(recipeId) + (actualCrafts * yieldAmt);
+                                state.machineProgress[recipeId] -= (actualCrafts * craftTime);
+                                stateChanged = true;
+                            } else if (state.machineProgress[recipeId] > craftTime) {
+                                state.machineProgress[recipeId] = craftTime;
+                            }
+                        }
+                    } else {
+                        state.machineProgress[recipeId] = 0;
+                    }
+                }
+            }
+
+            // 2. Process Logic Fabricators
+            if (state.assemblersAssigned) {
+                for (let recipeId of CRAFTING_ORDER) {
+                    if (SMELTING_RECIPES.includes(recipeId)) continue;
+                    let count = state.assemblersAssigned[recipeId] || 0;
+                    if (count > 0) {
+                        let item = ITEMS[recipeId];
+                        let craftTime = item.time || 1000;
+                        state.machineProgress[recipeId] = (state.machineProgress[recipeId] || 0) + (count * 1000);
+                        
+                        let maxCrafts = Math.floor(state.machineProgress[recipeId] / craftTime);
+                        
+                        if (item.cost && maxCrafts > 0) {
+                            for (let [ingrId, requiredAmount] of Object.entries(item.cost)) {
+                                let available = getItemAmount(ingrId);
+                                let possible = Math.floor(available / requiredAmount);
+                                if (possible < maxCrafts) maxCrafts = possible;
+                            }
+                        }
+
+                        let space = getMaxStorage(recipeId) - getItemAmount(recipeId);
+                        if (space < 0) space = 0;
+                        let yieldAmt = item.yield || 1;
+                        let maxFits = Math.floor(space / yieldAmt);
+                        if (maxCrafts > maxFits) maxCrafts = maxFits;
+
+                        if (maxCrafts > 0) {
+                            deductCost(item.cost, maxCrafts);
+                            state.inventory[recipeId] = getItemAmount(recipeId) + (maxCrafts * yieldAmt);
+                            state.machineProgress[recipeId] -= (maxCrafts * craftTime);
+                            stateChanged = true;
+                        } else if (state.machineProgress[recipeId] > craftTime) {
+                            state.machineProgress[recipeId] = craftTime;
+                        }
+                    } else {
+                        state.machineProgress[recipeId] = 0;
+                    }
+                }
+            }
+
+            if (stateChanged) updateUI();
+        }
+
+        let lastQueueTick = Date.now();
+        function queueTick() {
+            let now = Date.now();
+            let dt = now - lastQueueTick;
+            lastQueueTick = now;
+
+            if (state.craftingQueue && state.craftingQueue.length > 0) {
+                let current = state.craftingQueue[0];
+                current.timeLeft -= dt;
+                
+                if (current.timeLeft <= 0) {
+                    let item = ITEMS[current.id];
+                    let yieldAmt = item.yield || 1;
+                    state.inventory[current.id] = Math.min(getMaxStorage(current.id), getItemAmount(current.id) + yieldAmt);
+                    state.craftingQueue.shift();
+                    updateUI();
+                } else {
+                    const progressEl = document.getElementById('queueProgress0');
+                    if (progressEl) {
+                        let pct = Math.max(0, 100 - (current.timeLeft / current.totalTime) * 100);
+                        progressEl.style.width = `${pct}%`;
+                    } else {
+                        renderQueue();
+                    }
+                }
+            } else {
+                const qContainer = document.getElementById('queueContainer');
+                if (qContainer && !qContainer.innerHTML.includes('COMPILE QUEUE IDLE')) {
+                    renderQueue();
+                }
+            }
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+            return num.toString();
+        }
+
+        function getCostString(costObj, multiplier, itemId, isResearch = false) {
+            let reqs = [];
+            
+            if (itemId) {
+                let itemDef = ITEMS[itemId];
+                let totalYield = multiplier * (itemDef.yield || 1);
+                let projected = getItemAmount(itemId) + getQueuedAmount(itemId) + totalYield;
+                if (projected > getMaxStorage(itemId)) {
+                    reqs.push(`Cap Reached (Max ${formatNumber(getMaxStorage(itemId))})`);
+                }
+            }
+
+            if (costObj) {
+                for (let [id, amount] of Object.entries(costObj)) {
+                    let totalRequired = amount * multiplier;
+                    let current = getItemAmount(id);
+                    let missing = totalRequired - current;
+                    if (missing > 0) {
+                        reqs.push(`Need ${formatNumber(missing)}x ${ITEMS[id].name}`);
+                    }
+                }
+            }
+            if (reqs.length === 0) return isResearch ? 'Dependencies Met' : 'Ready to Compile';
+            return reqs.join('\n');
+        }
+
+        function renderCost(costObj) {
+            if (!costObj) return '';
+            let html = '';
+            for (let [id, amount] of Object.entries(costObj)) {
+                let item = ITEMS[id];
+                let hasEnough = getItemAmount(id) >= amount;
+                let colorClass = hasEnough 
+                    ? 'text-zinc-200 border-emerald-900 bg-emerald-900/20 opacity-100' 
+                    : 'text-zinc-500 border-zinc-800 bg-zinc-950 opacity-40 grayscale';
+                html += `<span class="${colorClass} has-tooltip cursor-help flex items-center gap-1 px-1 py-0.5 rounded text-[10px] border transition-all duration-200 font-mono" data-tip="${item.name}">
+                    ${item.icon} ${amount}
+                </span>`;
+            }
+            return html;
+        }
+
+        function renderQueue() {
+            const qContainer = document.getElementById('queueContainer');
+            if (!qContainer) return;
+
+            if (!state.craftingQueue || state.craftingQueue.length === 0) {
+                qContainer.innerHTML = '<div class="text-zinc-600 text-xs font-mono font-bold w-full text-center tracking-widest">COMPILE QUEUE IDLE</div>';
+                return;
+            }
+            
+            let groups = [];
+            for (let i = 0; i < state.craftingQueue.length; i++) {
+                let qItem = state.craftingQueue[i];
+                if (i === 0) {
+                    groups.push({ active: true, id: qItem.id, index: i, timeLeft: qItem.timeLeft, totalTime: qItem.totalTime, count: 1 });
+                } else {
+                    let lastGroup = groups[groups.length - 1];
+                    if (!lastGroup.active && lastGroup.id === qItem.id) {
+                        lastGroup.count++;
+                        lastGroup.indices.push(i);
+                    } else {
+                        groups.push({ active: false, id: qItem.id, count: 1, indices: [i] });
+                    }
+                }
+            }
+            
+            let html = '';
+            let displayCount = Math.min(groups.length, 25);
+            
+            for (let i = 0; i < displayCount; i++) {
+                let group = groups[i];
+                let itemDef = ITEMS[group.id];
+                
+                if (group.active) {
+                    let pct = Math.max(0, 100 - (group.timeLeft / group.totalTime) * 100);
+                    html += `
+                        <div class="has-tooltip cursor-pointer shrink-0" data-tip="Cancel ${itemDef.name}">
+                            <div onclick="cancelQueueItem(0)" class="group relative w-10 h-10 bg-zinc-800 border-2 border-brand rounded flex items-center justify-center overflow-hidden hover:border-red-500 transition-colors">
+                                <div id="queueProgress0" class="absolute bottom-0 left-0 h-full bg-brand/30 group-hover:bg-red-500/30 transition-colors" style="width: ${pct}%"></div>
+                                <div class="absolute inset-0 bg-red-950/90 hidden group-hover:flex items-center justify-center z-20">
+                                    <span class="text-white font-bold text-xs">✕</span>
+                                </div>
+                                <span class="relative z-10 text-lg pointer-events-none">${itemDef.icon}</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    let badge = group.count > 1 ? `<div class="absolute -top-1.5 -right-1.5 bg-brand text-zinc-900 text-[10px] font-bold px-1.5 min-w-[18px] text-center rounded-full border border-zinc-900 z-30 shadow-sm leading-tight">${group.count}</div>` : '';
+                    let cancelIdx = group.indices[group.indices.length - 1];
+                    html += `
+                        <div class="has-tooltip cursor-pointer shrink-0 relative" data-tip="Cancel ${itemDef.name}">
+                            ${badge}
+                            <div onclick="cancelQueueItem(${cancelIdx})" class="group relative w-8 h-8 bg-zinc-900 border border-zinc-700/80 rounded flex items-center justify-center opacity-75 hover:border-red-500 hover:opacity-100 transition-all overflow-hidden">
+                                <div class="absolute inset-0 bg-red-950/90 hidden group-hover:flex items-center justify-center z-20">
+                                    <span class="text-white font-bold text-[10px]">✕</span>
+                                </div>
+                                <span class="text-sm pointer-events-none">${itemDef.icon}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            let remainingGroups = groups.length - 25;
+            if (remainingGroups > 0) {
+                let totalRemainingItems = 0;
+                for (let i = 25; i < groups.length; i++) totalRemainingItems += groups[i].count;
+                html += `<div class="text-xs text-zinc-500 font-mono ml-1 shrink-0">+${totalRemainingItems} files</div>`;
+            }
+            
+            qContainer.innerHTML = html;
+        }
+
+        function updateUI() {
+            renderQueue();
+
+            // Inventory Sidebar
+            const invContainer = document.getElementById('inventoryContainer');
+            let totalItemTypes = 0;
+            
+            if (invContainer) {
+                invContainer.innerHTML = '';
+                for (let [id, item] of Object.entries(ITEMS)) {
+                    if (item.type === 'machine') continue;
+                    if (!isItemVisible(id)) continue;
+
+                    let amount = getItemAmount(id);
+                    totalItemTypes++;
+                    let itemMax = getMaxStorage(id);
+                    let fillPct = Math.min(100, Math.round((amount / itemMax) * 100));
+
+                    invContainer.innerHTML += `
+                        <div class="relative overflow-hidden p-1 rounded bg-zinc-800/60 hover:bg-zinc-800 transition-colors border border-zinc-700/60 flex items-center justify-between gap-1 has-tooltip cursor-help" data-tip="${item.name}&#10;Cached: ${formatNumber(amount)} / ${formatNumber(itemMax)}&#10;Cap Filled: ${fillPct}%">
+                            <span class="text-sm shrink-0 leading-none ${item.color}">${item.icon}</span>
+                            <span class="font-mono text-zinc-200 text-[10px] font-semibold leading-none">${formatNumber(amount)}</span>
+                            <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-zinc-900/80">
+                                <div class="h-full bg-brand transition-all" style="width: ${fillPct}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            document.getElementById('storageCount').innerText = `${totalItemTypes} Files`;
+
+            // Manual Gathering Buttons Visibility & Caps
+            RAW_RESOURCES.forEach(resId => {
+                let btn = document.getElementById(`btn-gather-${resId}`);
+                if (btn) {
+                    if (isItemVisible(resId)) {
+                        btn.classList.remove('hidden');
+                        let isFull = getItemAmount(resId) + getQueuedAmount(resId) + 1 > getMaxStorage(resId);
+                        btn.disabled = isFull;
+                        if(isFull) {
+                            btn.dataset.tip = `Cap Reached (Max ${formatNumber(getMaxStorage(resId))})`;
+                            btn.classList.add('cursor-default');
+                        } else {
+                            btn.dataset.tip = "";
+                            btn.classList.remove('cursor-default');
+                        }
+                    } else {
+                        btn.classList.add('hidden');
+                    }
+                }
+            });
+
+            // Fabrication
+            const craftContainer = document.getElementById('craftingContainer');
+            const noCraftingMsg = document.getElementById('noCraftingMsg');
+            
+            const visibleRecipes = state.unlockedRecipes || [];
+
+            if (craftContainer) {
+                if (visibleRecipes.length === 0) {
+                    craftContainer.innerHTML = '';
+                    if (noCraftingMsg) noCraftingMsg.classList.remove('hidden');
+                } else {
+                    if (noCraftingMsg) noCraftingMsg.classList.add('hidden');
+                    craftContainer.innerHTML = visibleRecipes.map(id => {
+                        let item = ITEMS[id];
+                        let currentWithQueue = getItemAmount(id) + getQueuedAmount(id);
+                        let yieldAmt = item.yield || 1;
+                        let itemMax = getMaxStorage(id);
+
+                        return `
+                            <div class="bg-zinc-900 border border-zinc-800 p-2 rounded flex flex-col justify-between gap-2 shadow-sm min-w-0">
+                                <div class="flex justify-between items-center w-full gap-1">
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <span class="text-lg shrink-0">${item.icon}</span>
+                                        <h3 class="font-bold text-zinc-200 text-[11px] sm:text-xs truncate font-mono">${item.name}</h3>
+                                    </div>
+                                    <span class="text-[9px] bg-zinc-950 border border-zinc-800 px-1 py-0.5 rounded font-mono text-brand shrink-0">
+                                        ${formatNumber(getItemAmount(id))}
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap gap-1">
+                                    ${renderCost(item.cost)}
+                                </div>
+                                <div class="mt-auto pt-1 flex flex-col gap-1 w-full font-mono">
+                                    <div class="has-tooltip w-full flex" data-tip="${getCostString(item.cost, 1, id)}">
+                                        <button onclick="craftItem('${id}', 1)" class="w-full btn-industrial py-1 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 1) || currentWithQueue + yieldAmt > itemMax ? 'disabled' : ''}>Fab 1</button>
+                                    </div>
+                                    <div class="flex gap-1 w-full">
+                                        <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 10, id)}">
+                                            <button onclick="craftItem('${id}', 10)" class="w-full btn-industrial py-1 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 10) || currentWithQueue + (yieldAmt * 10) > itemMax ? 'disabled' : ''}>10x</button>
+                                        </div>
+                                        <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 25, id)}">
+                                            <button onclick="craftItem('${id}', 25)" class="w-full btn-industrial py-1 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 25) || currentWithQueue + (yieldAmt * 25) > itemMax ? 'disabled' : ''}>25x</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // Automation Stats
+            const totalMiners = getItemAmount('thermal_drill') + getItemAmount('plasma_drill');
+            const usedMiners = getTotalAssigned(state.minersAssigned);
+            document.getElementById('totalMiners').innerText = totalMiners;
+            document.getElementById('unassignedMiners').innerText = totalMiners - usedMiners;
+            document.getElementById('totalElectricMiners').innerText = getItemAmount('plasma_drill');
+
+            const totalFurnaces = getItemAmount('doping_kiln') + getItemAmount('plasma_furnace');
+            const usedFurnaces = getTotalAssigned(state.furnacesAssigned);
+            document.getElementById('totalFurnaces').innerText = totalFurnaces;
+            document.getElementById('unassignedFurnaces').innerText = totalFurnaces - usedFurnaces;
+            document.getElementById('totalElectricFurnaces').innerText = getItemAmount('plasma_furnace');
+
+            const totalAssemblers = getItemAmount('logic_fab');
+            const usedAssemblers = getTotalAssigned(state.assemblersAssigned);
+            document.getElementById('totalAssemblers').innerText = totalAssemblers;
+            document.getElementById('unassignedAssemblers').innerText = totalAssemblers - usedAssemblers;
+
+            // Automation Visibility Controls
+            const hasMinersUnlocked = state.unlockedTechs.includes('automated_extraction') || totalMiners > 0;
+            const hasFurnacesUnlocked = state.unlockedTechs.includes('automated_doping') || totalFurnaces > 0;
+            const hasAssemblersUnlocked = state.unlockedTechs.includes('fabrication') || totalAssemblers > 0;
+            const hasStorageUnlocked = state.unlockedTechs.includes('data_storage') || getItemAmount('data_reel') > 0 || getItemAmount('server_rack') > 0;
+            const hasSteelUnlocked = state.unlockedTechs.includes('server_architecture') || getItemAmount('server_rack') > 0;
+
+            document.getElementById('minersSection').classList.toggle('hidden', !hasMinersUnlocked);
+            document.getElementById('furnacesSection').classList.toggle('hidden', !hasFurnacesUnlocked);
+            document.getElementById('assemblersSection').classList.toggle('hidden', !hasAssemblersUnlocked);
+            
+            document.getElementById('storageSection').classList.toggle('hidden', !hasStorageUnlocked);
+            const storageLockedMsg = document.getElementById('storageLockedMsg');
+            if (storageLockedMsg) storageLockedMsg.classList.toggle('hidden', hasStorageUnlocked);
+
+            const anyUnlocked = hasMinersUnlocked || hasFurnacesUnlocked || hasAssemblersUnlocked;
+            document.getElementById('automationLockedMsg').classList.toggle('hidden', anyUnlocked);
+
+            // Automation: Miners UI
+            const minersContainer = document.getElementById('minersContainer');
+            if (hasMinersUnlocked) {
+                const availableRaw = RAW_RESOURCES.filter(resId => isItemVisible(resId));
+                minersContainer.innerHTML = availableRaw.map(id => {
+                    let item = ITEMS[id];
+                    let assigned = (state.minersAssigned && state.minersAssigned[id]) || 0;
+                    return `
+                        <div class="bg-zinc-950 p-3 rounded border border-zinc-800 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">${item.icon}</span>
+                                <span class="font-bold text-sm text-zinc-300 font-mono">${item.name}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="font-mono text-xs text-zinc-500 hidden sm:inline-block">${assigned}/s</span>
+                                <div class="flex gap-1">
+                                    <button onclick="adjustMiner('${id}', -1)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center font-mono border border-zinc-700" ${assigned <= 0 ? 'disabled' : ''}>-</button>
+                                    <div class="w-10 h-8 flex items-center justify-center font-mono font-bold text-crt bg-black rounded border border-zinc-800">${assigned}</div>
+                                    <button onclick="adjustMiner('${id}', 1)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center font-mono border border-zinc-700" ${totalMiners - usedMiners <= 0 ? 'disabled' : ''}>+</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Automation: Furnaces UI
+            const furContainer = document.getElementById('furnacesContainer');
+            if (hasFurnacesUnlocked) {
+                const furnaceRecipes = (state.unlockedRecipes || []).filter(id => SMELTING_RECIPES.includes(id));
+                furContainer.innerHTML = furnaceRecipes.map(id => {
+                    let item = ITEMS[id];
+                    let assigned = (state.furnacesAssigned && state.furnacesAssigned[id]) || 0;
+                    return `
+                        <div class="bg-zinc-950 p-3 rounded border border-zinc-800 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">${item.icon}</span>
+                                <span class="font-bold text-sm text-zinc-300 font-mono">${item.name}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex gap-1">
+                                    <button onclick="adjustFurnace('${id}', -1)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center font-mono border border-zinc-700" ${assigned <= 0 ? 'disabled' : ''}>-</button>
+                                    <div class="w-10 h-8 flex items-center justify-center font-mono font-bold text-amber-500 bg-black rounded border border-zinc-800">${assigned}</div>
+                                    <button onclick="adjustFurnace('${id}', 1)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center font-mono border border-zinc-700" ${totalFurnaces - usedFurnaces <= 0 ? 'disabled' : ''}>+</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Automation: Assemblers UI
+            const asmContainer = document.getElementById('assemblersContainer');
+            if (hasAssemblersUnlocked) {
+                const automatableRecipes = (state.unlockedRecipes || []).filter(id => ITEMS[id] && ITEMS[id].cost && !SMELTING_RECIPES.includes(id));
+                asmContainer.innerHTML = automatableRecipes.map(id => {
+                    let item = ITEMS[id];
+                    let assigned = (state.assemblersAssigned && state.assemblersAssigned[id]) || 0;
+                    return `
+                        <div class="bg-zinc-950 p-3 rounded border border-zinc-800 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">${item.icon}</span>
+                                <span class="font-bold text-sm text-zinc-300 font-mono">${item.name}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex gap-1">
+                                    <button onclick="adjustAssembler('${id}', -1)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center font-mono border border-zinc-700" ${assigned <= 0 ? 'disabled' : ''}>-</button>
+                                    <div class="w-10 h-8 flex items-center justify-center font-mono font-bold text-brand bg-black rounded border border-zinc-800">${assigned}</div>
+                                    <button onclick="adjustAssembler('${id}', 1)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center font-mono border border-zinc-700" ${totalAssemblers - usedAssemblers <= 0 ? 'disabled' : ''}>+</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Storage Allocation UI
+            const storageAllocationContainer = document.getElementById('storageAllocationContainer');
+            const storageSection = document.getElementById('storageSection');
+            
+            if (hasStorageUnlocked) {
+                storageSection.innerHTML = `
+                    <div class="flex flex-wrap justify-between items-center mb-3 border-b border-zinc-800 pb-2 gap-2">
+                        <h3 class="text-base sm:text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Memory Allocation Map</h3>
+                        <div class="text-xs sm:text-sm font-mono flex gap-2">
+                            <span class="bg-zinc-950 px-2 py-0.5 sm:px-3 sm:py-1 rounded border border-zinc-800">Reels: <b class="text-zinc-300">${getItemAmount('data_reel')}</b></span>
+                            ${hasSteelUnlocked ? `<span class="bg-zinc-950 px-2 py-0.5 sm:px-3 sm:py-1 rounded border border-zinc-800">Racks: <b class="text-blue-400">${getItemAmount('server_rack')}</b></span>` : ''}
+                        </div>
+                    </div>
+                    <div id="storageAllocationContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"></div>
+                `;
+
+                const newContainer = document.getElementById('storageAllocationContainer');
+                const allAllocatable = [...new Set([...RAW_RESOURCES, ...(state.unlockedRecipes || [])])].filter(id => isItemVisible(id));
+
+                newContainer.innerHTML = allAllocatable.map(id => {
+                    let item = ITEMS[id];
+                    let iCount = (state.reelsAssigned && state.reelsAssigned[id]) || 0;
+                    let sCount = (state.racksAssigned && state.racksAssigned[id]) || 0;
+                    let curMax = getMaxStorage(id);
+                    
+                    let hasIron = getItemAmount('data_reel') > 0;
+                    let hasSteel = getItemAmount('server_rack') > 0;
+
+                    let ironBtn = `<button onclick="installChest('${id}', 'reel')" class="btn-industrial px-2 py-1.5 rounded text-[10px] font-bold text-zinc-300 w-full flex items-center justify-between transition-opacity font-mono ${!hasIron ? 'opacity-50 cursor-not-allowed' : 'hover:border-zinc-500/50'}" ${!hasIron ? 'disabled' : ''} title="Costs 1 Data Reel">
+                        <span>Mount Reel</span>
+                        <span class="text-zinc-400 font-mono">+250</span>
+                    </button>`;
+
+                    let steelBtn = hasSteelUnlocked ? `<button onclick="installChest('${id}', 'rack')" class="btn-industrial px-2 py-1.5 rounded text-[10px] font-bold text-zinc-300 w-full flex items-center justify-between transition-opacity font-mono ${!hasSteel || iCount <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-400/50'}" ${!hasSteel || iCount <= 0 ? 'disabled' : ''} title="Costs 1 Server Rack & Replaces 1 Mounted Reel">
+                        <span class="${iCount <= 0 ? 'text-zinc-500' : ''}">Deploy Rack</span>
+                        <span class="text-blue-400 font-mono">+750</span>
+                    </button>` : '';
+
+                    return `
+                        <div class="bg-zinc-950 border border-zinc-800/80 p-2 rounded flex flex-col gap-2">
+                            <div class="flex justify-between items-center gap-1">
+                                <div class="flex items-center gap-1.5 min-w-0 pr-1">
+                                    <span class="text-lg shrink-0 leading-none">${item.icon}</span>
+                                    <span class="text-[10px] text-brand font-mono leading-none font-bold">Cap: ${formatNumber(curMax)}</span>
+                                </div>
+                                <div class="text-[9px] font-mono text-zinc-500 flex gap-2 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
+                                    <span class="${iCount > 0 ? 'text-zinc-300 font-bold' : ''}" title="Mounted Reels">RL: ${iCount}</span>
+                                    ${hasSteelUnlocked ? `<span class="${sCount > 0 ? 'text-blue-300 font-bold' : ''}" title="Deployed Server Racks">RK: ${sCount}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-1 w-full">
+                                ${ironBtn}
+                                ${steelBtn}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Research Tab UI
+            const resContainer = document.getElementById('researchContainer');
+            let canUnlockAny = false;
+            let resHtml = '';
+            
+            for (let [techId, tech] of Object.entries(TECH_TREE)) {
+                let isUnlocked = state.unlockedTechs.includes(techId);
+                let reqMet = tech.req.every(r => state.unlockedTechs.includes(r));
+                
+                if (!reqMet && !isUnlocked) continue; 
+                
+                let canAffordTech = canAfford(tech.cost);
+                if(reqMet && !isUnlocked && canAffordTech) canUnlockAny = true;
+
+                let visibleUnlocks = tech.unlocks || [];
+                let borderClass = isUnlocked ? 'border-brand/30 bg-emerald-950/20 opacity-75' : 'border-zinc-700 bg-zinc-900';
+                
+                resHtml += `
+                    <div class="p-3 rounded border ${borderClass} flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-4 shadow-sm">
+                        <div class="flex gap-3 items-center min-w-0">
+                            <div class="w-10 h-10 bg-zinc-950 rounded flex items-center justify-center text-xl border border-zinc-800 shadow-inner shrink-0">
+                                ${tech.icon}
+                            </div>
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-bold text-zinc-200 truncate font-mono">${tech.name}</h3>
+                                <p class="text-xs text-zinc-400 leading-tight mb-1 truncate">${tech.desc}</p>
+                                ${!isUnlocked ? `<div class="flex flex-wrap gap-1">${renderCost(tech.cost)}</div>` : ''}
+                                ${isUnlocked && visibleUnlocks.length > 0 ? `<div class="text-[10px] uppercase tracking-wider text-brand/70 font-mono truncate">Unlocks: ${visibleUnlocks.map(u => ITEMS[u].name).join(', ')}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-end shrink-0 font-mono">
+                            ${isUnlocked 
+                                ? `<span class="text-emerald-500 font-bold text-[10px] bg-emerald-950/50 px-2 py-1 rounded border border-emerald-900">✓ COMPILED</span>`
+                                : `<div class="has-tooltip" data-tip="${getCostString(tech.cost, 1, null, true)}">
+                                     <button onclick="researchTech('${tech.id}')" class="btn-industrial px-4 py-1.5 rounded font-bold text-xs text-zinc-200 w-full sm:w-auto uppercase tracking-wider" ${!canAffordTech ? 'disabled' : ''}>Compile</button>
+                                   </div>`
+                            }
+                        </div>
+                    </div>
+                `;
+            }
+            resContainer.innerHTML = resHtml;
+
+            if(canUnlockAny && document.getElementById('tab-research').classList.contains('hidden')) {
+                document.getElementById('techBadge').classList.remove('hidden');
+            } else {
+                document.getElementById('techBadge').classList.add('hidden');
+            }
+        }
+
+        function showToast(msg, type="info") {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            
+            const colorClass = type === 'error' ? 'border-red-500 text-red-100 bg-red-950/90' 
+                             : type === 'success' ? 'border-emerald-500 text-emerald-100 bg-emerald-950/90' 
+                             : 'border-zinc-500 text-zinc-100 bg-zinc-900/90';
+
+            toast.className = `px-4 py-3 rounded shadow-lg border-l-4 ${colorClass} font-mono text-sm toast-enter flex items-center gap-2 backdrop-blur-sm`;
+            toast.innerHTML = `
+                ${type === 'error' ? '!!' : type === 'success' ? '>>' : '>_'}
+                ${msg}
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.replace('toast-enter', 'toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- LOCAL STORAGE AUTO-SAVE ---
+        const SAVE_KEY = 'hypostrate_localSave_v1';
+        
+        function saveToLocal() {
+            try {
+                localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+            } catch(e) {
+                console.warn('Auto-save failed.');
+            }
+        }
+
+        function loadFromLocal() {
+            try {
+                const saved = localStorage.getItem(SAVE_KEY);
+                if (saved) {
+                    const parsedState = JSON.parse(saved);
+                    if (parsedState && typeof parsedState === 'object') {
+                        state = Object.assign(state, parsedState);
+                        
+                        if (!state.furnacesAssigned) state.furnacesAssigned = {};
+                        if (state.assemblersAssigned) {
+                            SMELTING_RECIPES.forEach(recipe => {
+                                if (state.assemblersAssigned[recipe]) {
+                                    state.furnacesAssigned[recipe] = (state.furnacesAssigned[recipe] || 0) + state.assemblersAssigned[recipe];
+                                    state.assemblersAssigned[recipe] = 0;
+                                }
+                            });
+                        }
+                    }
+                }
+            } catch(e) {
+                console.warn('Failed to load local save data.');
+            }
+        }
+        
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') saveToLocal();
+        });
+        window.addEventListener('beforeunload', saveToLocal);
+
+        function init() {
+            loadFromLocal(); 
+
+            switchTab('fabrication');
+            updateUI();
+
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 500); // Tiny dramatic pause for terminal boot feel
+            }
+
+            setInterval(gameTick, 1000); 
+            setInterval(queueTick, 50);
+            
+            setInterval(saveToLocal, 10000); 
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
