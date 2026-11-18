@@ -129,42 +129,42 @@
     <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
         
         <!-- Left Sidebar: Manual Actions & Inventory -->
-        <aside class="w-full md:w-72 h-[40vh] md:h-auto bg-zinc-900 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col z-10 flex-shrink-0">
+        <aside class="w-full md:w-72 h-[32vh] min-h-[160px] md:h-auto md:max-h-none bg-zinc-900 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col z-10 flex-shrink-0">
             <!-- Manual Gathering -->
-            <div class="p-3 md:p-4 border-b border-zinc-800 shrink-0">
+            <div class="p-2.5 md:p-4 border-b border-zinc-800 shrink-0">
                 <h2 class="text-[10px] md:text-xs uppercase text-zinc-500 tracking-wider mb-2 md:mb-3 font-bold font-mono">Manual Extraction</h2>
-                <div class="space-y-1.5 md:space-y-2">
-                    <button id="btn-gather-carbon" onclick="manualGather('carbon')" class="w-full btn-industrial rounded py-1.5 md:py-2 px-3 flex justify-between items-center text-zinc-400 has-tooltip hidden">
-                        <span class="flex items-center gap-2">
+                <div class="grid grid-cols-3 md:grid-cols-1 gap-1.5 md:gap-2">
+                    <button id="btn-gather-carbon" onclick="manualGather('carbon')" class="w-full btn-industrial rounded py-1.5 md:py-2 px-2 md:px-3 flex flex-col md:flex-row justify-center md:justify-between items-center text-zinc-400 has-tooltip hidden">
+                        <span class="flex flex-col md:flex-row items-center gap-0.5 md:gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" class="inline-block"><path d="M12 2 L20 7 L20 17 L12 22 L4 17 L4 7 Z" fill="#18181b" stroke="#52525b" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 2 L12 12 M4 7 L12 12 M20 7 L12 12" stroke="#3f3f46" stroke-width="1.5" fill="none"/></svg>
-                            <span class="font-mono text-sm">Extract Carbon</span>
+                            <span class="font-mono text-[9px] md:text-sm">Carbon</span>
                         </span>
-                        <span class="text-xs opacity-50 font-mono">+1</span>
+                        <span class="text-xs opacity-50 font-mono hidden md:inline">+1</span>
                     </button>
-                    <button id="btn-gather-raw_silicon" onclick="manualGather('raw_silicon')" class="w-full btn-industrial rounded py-1.5 md:py-2 px-3 flex justify-between items-center text-cyan-400 has-tooltip hidden">
-                        <span class="flex items-center gap-2">
+                    <button id="btn-gather-raw_silicon" onclick="manualGather('raw_silicon')" class="w-full btn-industrial rounded py-1.5 md:py-2 px-2 md:px-3 flex flex-col md:flex-row justify-center md:justify-between items-center text-cyan-400 has-tooltip hidden">
+                        <span class="flex flex-col md:flex-row items-center gap-0.5 md:gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" class="inline-block"><polygon points="12,3 19,10 12,21 5,10" fill="#082f49" stroke="#0ea5e9" stroke-width="1.5"/><polygon points="12,3 12,21 5,10" fill="#0c4a6e" opacity="0.7"/></svg>
-                            <span class="font-mono text-sm">Extract Silicon</span>
+                            <span class="font-mono text-[9px] md:text-sm">Silicon</span>
                         </span>
-                        <span class="text-xs opacity-50 font-mono">+1</span>
+                        <span class="text-xs opacity-50 font-mono hidden md:inline">+1</span>
                     </button>
-                    <button id="btn-gather-raw_copper" onclick="manualGather('raw_copper')" class="w-full btn-industrial rounded py-1.5 md:py-2 px-3 flex justify-between items-center text-amber-500 has-tooltip hidden">
-                        <span class="flex items-center gap-2">
+                    <button id="btn-gather-raw_copper" onclick="manualGather('raw_copper')" class="w-full btn-industrial rounded py-1.5 md:py-2 px-2 md:px-3 flex flex-col md:flex-row justify-center md:justify-between items-center text-amber-500 has-tooltip hidden">
+                        <span class="flex flex-col md:flex-row items-center gap-0.5 md:gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" class="inline-block"><path d="M7 4 L17 4 L21 12 L17 20 L7 20 L3 12 Z" fill="#451a03" stroke="#d97706" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="2" fill="#f59e0b"/></svg>
-                            <span class="font-mono text-sm">Extract Copper</span>
+                            <span class="font-mono text-[9px] md:text-sm">Copper</span>
                         </span>
-                        <span class="text-xs opacity-50 font-mono">+1</span>
+                        <span class="text-xs opacity-50 font-mono hidden md:inline">+1</span>
                     </button>
                 </div>
             </div>
 
             <!-- Inventory List -->
-            <div class="flex-1 overflow-y-auto p-3 md:p-4">
+            <div class="flex-1 overflow-y-auto p-2.5 md:p-4">
                 <h2 class="text-[10px] md:text-xs uppercase text-zinc-500 tracking-wider mb-2 md:mb-3 font-bold font-mono flex justify-between items-center">
                     <span>Local Cache</span>
-                    <span id="storageCount" class="text-brand font-mono text-[11px]">0 Files</span>
+                    <span id="storageCount" class="text-brand font-mono text-[10px] md:text-[11px]">0 Files</span>
                 </h2>
-                <div id="inventoryContainer" class="grid grid-cols-2 gap-1.5">
+                <div id="inventoryContainer" class="grid grid-cols-3 xs:grid-cols-4 md:grid-cols-2 gap-1.5">
                     <!-- Inventory items injected dynamically -->
                 </div>
             </div>
@@ -207,7 +207,7 @@
                 <!-- FABRICATION TAB -->
                 <div id="tab-fabrication" class="tab-content h-full flex-col">
                     <div id="noCraftingMsg" class="hidden flex-1 flex items-center justify-center text-zinc-600 font-mono text-center border-2 border-dashed border-zinc-800 rounded-lg p-10">No schematics loaded.</div>
-                    <div id="craftingContainer" class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 pb-10">
+                    <div id="craftingContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 pb-10">
                         <!-- Recipes injected here -->
                     </div>
                 </div>
@@ -219,38 +219,38 @@
                     </div>
 
                     <!-- Miners Section -->
-                    <div id="minersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-4 md:p-5">
-                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2 gap-2">
+                    <div id="minersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-3 md:p-5">
+                        <div class="flex justify-between items-center mb-3 md:mb-4 border-b border-zinc-800 pb-2 gap-2">
                             <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Thermal & Plasma Drills</h3>
                             <div class="text-xs md:text-sm font-mono bg-zinc-950 px-2 py-1 md:px-3 rounded border border-zinc-800">
                                 Unassigned: <span id="unassignedMiners" class="text-crt">0</span> / <span id="totalMiners">0</span> <span class="text-zinc-500 ml-1 text-[10px] hidden md:inline">(<span id="totalElectricMiners">0</span> Plasma)</span>
                             </div>
                         </div>
-                        <p class="text-[11px] md:text-xs text-zinc-400 mb-3 font-mono">Thermal Drills consume 1 Carbon per cycle (except when extracting Carbon). Plasma variants draw ambient power.</p>
-                        <div id="minersContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4"></div>
+                        <p class="text-[10px] md:text-xs text-zinc-400 mb-3 font-mono">Thermal Drills consume 1 Carbon per cycle (except when extracting Carbon). Plasma variants draw ambient power.</p>
+                        <div id="minersContainer" class="grid grid-cols-1 xs:grid-cols-2 gap-2 md:gap-4"></div>
                     </div>
 
                     <!-- Furnaces Section -->
-                    <div id="furnacesSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-4 md:p-5">
-                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2 gap-2">
+                    <div id="furnacesSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-3 md:p-5">
+                        <div class="flex justify-between items-center mb-3 md:mb-4 border-b border-zinc-800 pb-2 gap-2">
                             <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Doping Kilns & Furnaces</h3>
                             <div class="text-xs md:text-sm font-mono bg-zinc-950 px-2 py-1 md:px-3 rounded border border-zinc-800">
                                 Unassigned: <span id="unassignedFurnaces" class="text-crt">0</span> / <span id="totalFurnaces">0</span> <span class="text-zinc-500 ml-1 text-[10px] hidden md:inline">(<span id="totalElectricFurnaces">0</span> Plasma)</span>
                             </div>
                         </div>
-                        <p class="text-[11px] md:text-xs text-zinc-400 mb-3 font-mono">Doping Kilns consume 1 Carbon per operation. Plasma Furnaces run without Carbon fuel.</p>
-                        <div id="furnacesContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4"></div>
+                        <p class="text-[10px] md:text-xs text-zinc-400 mb-3 font-mono">Doping Kilns consume 1 Carbon per operation. Plasma Furnaces run without Carbon fuel.</p>
+                        <div id="furnacesContainer" class="grid grid-cols-1 xs:grid-cols-2 gap-2 md:gap-4"></div>
                     </div>
 
                     <!-- Assemblers Section -->
-                    <div id="assemblersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-4 md:p-5">
-                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2 gap-2">
+                    <div id="assemblersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-3 md:p-5">
+                        <div class="flex justify-between items-center mb-3 md:mb-4 border-b border-zinc-800 pb-2 gap-2">
                             <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Logic Fabricators</h3>
                             <div class="text-xs md:text-sm font-mono bg-zinc-950 px-2 py-1 md:px-3 rounded border border-zinc-800">
                                 Unassigned: <span id="unassignedAssemblers" class="text-crt">0</span> / <span id="totalAssemblers">0</span>
                             </div>
                         </div>
-                        <div id="assemblersContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4"></div>
+                        <div id="assemblersContainer" class="grid grid-cols-1 xs:grid-cols-2 gap-2 md:gap-4"></div>
                     </div>
                 </div>
 
@@ -1464,17 +1464,15 @@
                                 <div class="flex flex-wrap gap-1">
                                     ${renderCost(item.cost)}
                                 </div>
-                                <div class="mt-auto pt-1 flex flex-col gap-1 w-full font-mono">
-                                    <div class="has-tooltip w-full flex" data-tip="${getCostString(item.cost, 1, id)}">
-                                        <button onclick="craftItem('${id}', 1)" class="w-full btn-industrial py-1 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 1) || currentWithQueue + yieldAmt > itemMax ? 'disabled' : ''}>Fab 1</button>
+                                <div class="mt-auto pt-1 flex gap-1 w-full font-mono">
+                                    <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 1, id)}">
+                                        <button onclick="craftItem('${id}', 1)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 1) || currentWithQueue + yieldAmt > itemMax ? 'disabled' : ''}>1x</button>
                                     </div>
-                                    <div class="flex gap-1 w-full">
-                                        <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 10, id)}">
-                                            <button onclick="craftItem('${id}', 10)" class="w-full btn-industrial py-1 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 10) || currentWithQueue + (yieldAmt * 10) > itemMax ? 'disabled' : ''}>10x</button>
-                                        </div>
-                                        <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 25, id)}">
-                                            <button onclick="craftItem('${id}', 25)" class="w-full btn-industrial py-1 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 25) || currentWithQueue + (yieldAmt * 25) > itemMax ? 'disabled' : ''}>25x</button>
-                                        </div>
+                                    <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 10, id)}">
+                                        <button onclick="craftItem('${id}', 10)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 10) || currentWithQueue + (yieldAmt * 10) > itemMax ? 'disabled' : ''}>10x</button>
+                                    </div>
+                                    <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 25, id)}">
+                                        <button onclick="craftItem('${id}', 25)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 25) || currentWithQueue + (yieldAmt * 25) > itemMax ? 'disabled' : ''}>25x</button>
                                     </div>
                                 </div>
                             </div>
@@ -1527,7 +1525,7 @@
                     let item = ITEMS[id];
                     let assigned = (state.minersAssigned && state.minersAssigned[id]) || 0;
                     return `
-                        <div class="bg-zinc-950 p-3 rounded border border-zinc-800 flex justify-between items-center">
+                        <div class="bg-zinc-950 p-2 sm:p-3 rounded border border-zinc-800 flex justify-between items-center">
                             <div class="flex items-center gap-2">
                                 <span class="text-xl">${item.icon}</span>
                                 <span class="font-bold text-sm text-zinc-300 font-mono">${item.name}</span>
@@ -1553,7 +1551,7 @@
                     let item = ITEMS[id];
                     let assigned = (state.furnacesAssigned && state.furnacesAssigned[id]) || 0;
                     return `
-                        <div class="bg-zinc-950 p-3 rounded border border-zinc-800 flex justify-between items-center">
+                        <div class="bg-zinc-950 p-2 sm:p-3 rounded border border-zinc-800 flex justify-between items-center">
                             <div class="flex items-center gap-2">
                                 <span class="text-xl">${item.icon}</span>
                                 <span class="font-bold text-sm text-zinc-300 font-mono">${item.name}</span>
@@ -1578,7 +1576,7 @@
                     let item = ITEMS[id];
                     let assigned = (state.assemblersAssigned && state.assemblersAssigned[id]) || 0;
                     return `
-                        <div class="bg-zinc-950 p-3 rounded border border-zinc-800 flex justify-between items-center">
+                        <div class="bg-zinc-950 p-2 sm:p-3 rounded border border-zinc-800 flex justify-between items-center">
                             <div class="flex items-center gap-2">
                                 <span class="text-xl">${item.icon}</span>
                                 <span class="font-bold text-sm text-zinc-300 font-mono">${item.name}</span>
@@ -1608,7 +1606,7 @@
                             ${hasSteelUnlocked ? `<span class="bg-zinc-950 px-2 py-0.5 sm:px-3 sm:py-1 rounded border border-zinc-800">Racks: <b class="text-blue-400">${getItemAmount('server_rack')}</b></span>` : ''}
                         </div>
                     </div>
-                    <div id="storageAllocationContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"></div>
+                    <div id="storageAllocationContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5"></div>
                 `;
 
                 const newContainer = document.getElementById('storageAllocationContainer');
@@ -1638,9 +1636,9 @@
                             <div class="flex justify-between items-center gap-1">
                                 <div class="flex items-center gap-1.5 min-w-0 pr-1">
                                     <span class="text-lg shrink-0 leading-none">${item.icon}</span>
-                                    <span class="text-[10px] text-brand font-mono leading-none font-bold">Cap: ${formatNumber(curMax)}</span>
+                                    <span class="text-[10px] text-brand font-mono leading-none font-bold truncate">Cap: ${formatNumber(curMax)}</span>
                                 </div>
-                                <div class="text-[9px] font-mono text-zinc-500 flex gap-2 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
+                                <div class="text-[9px] font-mono text-zinc-500 flex gap-1.5 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 shrink-0">
                                     <span class="${iCount > 0 ? 'text-zinc-300 font-bold' : ''}" title="Mounted Reels">RL: ${iCount}</span>
                                     ${hasSteelUnlocked ? `<span class="${sCount > 0 ? 'text-blue-300 font-bold' : ''}" title="Deployed Server Racks">RK: ${sCount}</span>` : ''}
                                 </div>
