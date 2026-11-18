@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Hypostrate</title>
     
     <!-- UPDATE THIS VERSION TO TRIGGER AUTOMATIC APP REFRESH FOR INSTALLED USERS -->
-    <meta name="app-version" content="1.0.1">
+    <meta name="app-version" content="1.0.3">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#09090b">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Hypostrate">
     <meta name="description" content="An offline-capable incremental reality simulation game.">
 
@@ -42,6 +42,7 @@
             user-select: none;
             overflow: hidden;
             overscroll-behavior: none; 
+            padding-top: env(safe-area-inset-top); /* Ensures content doesn't hide behind notch */
         }
 
         h1, h2, h3, h4, h5, .font-mono {
@@ -114,13 +115,14 @@
     <!-- Top Header -->
     <header class="bg-zinc-950 border-b border-zinc-800 p-3 flex justify-between items-center z-20 shadow-md shrink-0">
         <div class="flex items-center gap-3">
-            <div class="text-brand font-bold text-xl sm:text-2xl tracking-widest flex items-center gap-2 font-mono">
+            <div id="brandLogo" onclick="handleLogoTap()" class="text-brand font-bold text-xl sm:text-2xl tracking-widest flex items-center gap-2 font-mono cursor-pointer">
                 <svg class="animate-[pulse_2s_ease-in-out_infinite]" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
                 HYPOSTRATE
             </div>
         </div>
         <div class="flex items-center gap-2 text-sm font-mono">
-            <button onclick="openPlaytestModal()" class="text-xs bg-emerald-900/40 hover:bg-emerald-800/60 border border-emerald-500/50 text-emerald-400 px-2.5 py-1 rounded font-bold transition-colors flex items-center gap-1 shadow-sm">
+            <!-- Hidden by default for public builds; unlocked via ?dev=true or triple-tapping logo -->
+            <button id="devMenuBtn" onclick="openPlaytestModal()" class="hidden text-xs bg-emerald-900/40 hover:bg-emerald-800/60 border border-emerald-500/50 text-emerald-400 px-2.5 py-1 rounded font-bold transition-colors flex items-center gap-1 shadow-sm">
                 <span>[ DEV ]</span>
             </button>
             <button onclick="exportSave()" class="text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 px-2.5 py-1 rounded text-zinc-300 transition-colors hidden sm:block">Export</button>
@@ -282,7 +284,6 @@
     </div>
 
     <!-- Toast Container -->
-    <!-- Added pointer-events-none but will allow specific toasts to be clickable -->
     <div id="toastContainer" class="fixed bottom-4 right-4 flex flex-col gap-2 z-[60] pointer-events-none"></div>
 
     <!-- Global Floating Tooltip -->
@@ -364,11 +365,60 @@
     </div>
 
     <script>
+        // --- DEV MODE GATE ---
+        // Controls whether the [ DEV ] button is visible.
+        // Activated via URL (?dev=true), local storage flag, or triple-tapping the logo.
+        const DEV_KEY = 'hypostrate_dev_mode';
+        let isDevMode = false;
+
+        function initDevMode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('dev') === 'true') {
+                isDevMode = true;
+                localStorage.setItem(DEV_KEY, 'true');
+            } else if (urlParams.get('dev') === 'false') {
+                isDevMode = false;
+                localStorage.removeItem(DEV_KEY);
+            } else if (localStorage.getItem(DEV_KEY) === 'true') {
+                isDevMode = true;
+            }
+            updateDevUI();
+        }
+
+        function updateDevUI() {
+            const devBtn = document.getElementById('devMenuBtn');
+            if (devBtn) {
+                devBtn.classList.toggle('hidden', !isDevMode);
+            }
+        }
+
+        let logoTapCount = 0;
+        let logoTapTimer = null;
+
+        window.handleLogoTap = function() {
+            logoTapCount++;
+            clearTimeout(logoTapTimer);
+            logoTapTimer = setTimeout(() => {
+                logoTapCount = 0;
+            }, 600);
+
+            if (logoTapCount >= 3) {
+                logoTapCount = 0;
+                isDevMode = !isDevMode;
+                if (isDevMode) {
+                    localStorage.setItem(DEV_KEY, 'true');
+                    showToast("Developer Shell Unlocked", "success");
+                } else {
+                    localStorage.removeItem(DEV_KEY);
+                    closePlaytestModal();
+                    showToast("Developer Shell Locked", "info");
+                }
+                updateDevUI();
+            }
+        };
+
         // --- PROGRESSIVE WEB APP (PWA) INITIALIZATION ---
-        // Automatically render an SVG into a high-res Canvas PNG to guarantee 
-        // iOS App Icon and Favicon compatibility without external files.
         (function initPWA() {
-            // Highly optimized CPU icon with a solid terminal-black background
             const svgIconStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512">
                 <rect width="24" height="24" fill="#09090b"/>
                 <g stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
@@ -387,14 +437,12 @@
             
             const svgDataUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgIconStr);
 
-            // 1. Inject standard SVG Favicon for modern desktop tabs instantly
             const favicon = document.createElement('link');
             favicon.rel = 'icon';
             favicon.type = 'image/svg+xml';
             favicon.href = svgDataUrl;
             document.head.appendChild(favicon);
 
-            // 2. Render to PNG for iOS Apple Touch Icon & Manifest
             const img = new Image();
             img.onload = function() {
                 const canvas = document.createElement('canvas');
@@ -404,18 +452,19 @@
                 ctx.drawImage(img, 0, 0);
                 const pngDataUrl = canvas.toDataURL('image/png');
                 
-                // Inject iOS Icon
                 const appleIcon = document.createElement('link');
                 appleIcon.rel = 'apple-touch-icon';
                 appleIcon.href = pngDataUrl;
                 document.head.appendChild(appleIcon);
                 
-                // Inject Manifest
+                // Preserve current query params (e.g., ?dev=true) if installed from dev URL
+                const startUrl = window.location.href.split('#')[0];
+
                 const manifest = {
-                    name: "Hypostrate",
-                    short_name: "Hypostrate",
+                    name: isDevMode ? "Hypostrate [DEV]" : "Hypostrate",
+                    short_name: isDevMode ? "Hypostrate DEV" : "Hypostrate",
                     description: "An offline-capable incremental reality simulation game.",
-                    start_url: window.location.href.split('?')[0].split('#')[0],
+                    start_url: startUrl,
                     display: "standalone",
                     background_color: "#09090b",
                     theme_color: "#09090b",
@@ -436,14 +485,12 @@
         })();
 
         // --- AUTOMATIC UPDATE SYSTEM ---
-        // Seamlessly checks for remote modifications to this file without SW requirements
         async function checkForUpdates() {
             try {
                 const metaTag = document.querySelector('meta[name="app-version"]');
                 if (!metaTag) return;
                 const currentVersion = metaTag.content;
                 
-                // Cache-busting URL parameter guarantees we bypass the browser's PWA caching
                 const url = new URL(window.location.href.split('?')[0]);
                 url.searchParams.set('t', Date.now());
                 
@@ -457,20 +504,18 @@
                     showUpdatePrompt();
                 }
             } catch (e) {
-                // If offline or blocked, silently fail so gameplay isn't disrupted
                 console.log("Could not poll for updates (offline or restricted).");
             }
         }
 
         function showUpdatePrompt() {
-            if (document.getElementById('updateToast')) return; // Deduplication
+            if (document.getElementById('updateToast')) return;
             
             const container = document.getElementById('toastContainer');
             if (!container) return;
             
             const toast = document.createElement('div');
             toast.id = 'updateToast';
-            // Force pointer-events-auto so this specific toast is clickable
             toast.className = `px-4 py-3 rounded shadow-lg border-l-4 border-brand text-brand bg-zinc-900/95 font-mono text-sm toast-enter flex items-center justify-between gap-4 backdrop-blur-md pointer-events-auto`;
             toast.innerHTML = `
                 <div class="flex items-center gap-2">
@@ -486,17 +531,14 @@
         }
 
         window.applyUpdate = function() {
-            // Save state immediately before reloading just to be safe
             saveToLocal();
             
-            // Purge any hidden caches that mobile browsers might have made
             if ('caches' in window) {
                 caches.keys().then(names => names.forEach(name => caches.delete(name)));
             }
             
-            // Force a true network reload via unique query string
-            const url = new URL(window.location.href.split('?')[0]);
-            url.searchParams.set('v', Date.now()); // Break cache
+            const url = new URL(window.location.href.split('#')[0]);
+            url.searchParams.set('v', Date.now());
             window.location.replace(url.href);
         };
 
@@ -710,6 +752,7 @@
         };
 
         window.openPlaytestModal = function() {
+            if (!isDevMode) return;
             const modal = document.getElementById('playtestModal');
             if (modal) {
                 modal.classList.remove('hidden');
@@ -749,6 +792,7 @@
         }
 
         window.playtestAddItem = function(itemId) {
+            if (!isDevMode) return;
             const input = document.getElementById('playtestAmount');
             const amount = parseInt(input ? input.value : 100, 10) || 0;
             if (amount === 0) return;
@@ -762,6 +806,7 @@
         };
 
         window.playtestAddAll = function() {
+            if (!isDevMode) return;
             const input = document.getElementById('playtestAmount');
             const amount = parseInt(input ? input.value : 100, 10) || 0;
             if (amount === 0) return;
@@ -804,6 +849,7 @@
         }
 
         window.devUnlockTech = function(id) {
+            if (!isDevMode) return;
             const tech = TECH_TREE[id];
             if(state.unlockedTechs.includes(id)) return;
             const reqMet = tech.req.every(r => state.unlockedTechs.includes(r));
@@ -823,6 +869,7 @@
         };
 
         window.devUnlockAllAvailableTech = function() {
+            if (!isDevMode) return;
             let unlockedAny = false;
             let keepChecking = true;
             
@@ -899,7 +946,6 @@
                             craftingQueue: [], machineProgress: {}
                         }, parsedState);
                         
-                        // Compatibility for older imports
                         if (state.assemblersAssigned) {
                             SMELTING_RECIPES.forEach(recipe => {
                                 if (state.assemblersAssigned[recipe]) {
@@ -1470,7 +1516,6 @@
                     let itemMax = getMaxStorage(id);
                     let fillPct = Math.min(100, Math.round((amount / itemMax) * 100));
 
-                    // MOBILE LAYOUT FIX: Changed from row to flex-col on small screens, increased padding, enlarged icon text
                     invContainer.innerHTML += `
                         <div class="relative overflow-hidden p-1.5 md:p-1 rounded bg-zinc-800/60 hover:bg-zinc-800 transition-colors border border-zinc-700/60 flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-1.5 has-tooltip cursor-help" data-tip="${item.name}&#10;Cached: ${formatNumber(amount)} / ${formatNumber(itemMax)}&#10;Cap Filled: ${fillPct}%">
                             <span class="text-lg md:text-sm shrink-0 leading-none ${item.color}">${item.icon}</span>
@@ -1838,7 +1883,6 @@
             if (document.visibilityState === 'hidden') {
                 saveToLocal();
             } else if (document.visibilityState === 'visible') {
-                // Periodically check for structural file updates upon tabbing back in
                 checkForUpdates();
             }
         });
@@ -1846,6 +1890,7 @@
         window.addEventListener('beforeunload', saveToLocal);
 
         function init() {
+            initDevMode();
             loadFromLocal(); 
 
             switchTab('fabrication');
@@ -1855,7 +1900,6 @@
             if (overlay) {
                 setTimeout(() => {
                     overlay.classList.add('hidden');
-                    // Delay the initial update check to keep the boot process feeling responsive
                     setTimeout(checkForUpdates, 3000);
                 }, 500);
             }
