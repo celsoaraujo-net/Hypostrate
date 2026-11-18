@@ -17,6 +17,9 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    screens: {
+                        'xs': '475px',
+                    },
                     colors: {
                         brand: '#10b981', // Phosphor green
                         crt: '#f59e0b',   // Amber CRT
@@ -122,30 +125,31 @@
         </div>
     </header>
 
-    <!-- Main Layout -->
-    <div class="flex-1 flex overflow-hidden">
+    <!-- Main Layout: Updated flex-col to md:flex-row for mobile stacking -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
         
         <!-- Left Sidebar: Manual Actions & Inventory -->
-        <aside class="w-72 bg-zinc-900 border-r border-zinc-800 flex flex-col z-10 flex-shrink-0">
+        <!-- Updated width, height, and border logic to collapse down on mobile screens -->
+        <aside class="w-full md:w-72 h-[40vh] md:h-auto bg-zinc-900 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col z-10 flex-shrink-0">
             <!-- Manual Gathering -->
-            <div class="p-4 border-b border-zinc-800 shrink-0">
-                <h2 class="text-xs uppercase text-zinc-500 tracking-wider mb-3 font-bold font-mono">Manual Extraction</h2>
-                <div class="space-y-2">
-                    <button id="btn-gather-carbon" onclick="manualGather('carbon')" class="w-full btn-industrial rounded py-2 px-3 flex justify-between items-center text-zinc-400 has-tooltip hidden">
+            <div class="p-3 md:p-4 border-b border-zinc-800 shrink-0">
+                <h2 class="text-[10px] md:text-xs uppercase text-zinc-500 tracking-wider mb-2 md:mb-3 font-bold font-mono">Manual Extraction</h2>
+                <div class="space-y-1.5 md:space-y-2">
+                    <button id="btn-gather-carbon" onclick="manualGather('carbon')" class="w-full btn-industrial rounded py-1.5 md:py-2 px-3 flex justify-between items-center text-zinc-400 has-tooltip hidden">
                         <span class="flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" class="inline-block"><path d="M12 2 L20 7 L20 17 L12 22 L4 17 L4 7 Z" fill="#18181b" stroke="#52525b" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 2 L12 12 M4 7 L12 12 M20 7 L12 12" stroke="#3f3f46" stroke-width="1.5" fill="none"/></svg>
                             <span class="font-mono text-sm">Extract Carbon</span>
                         </span>
                         <span class="text-xs opacity-50 font-mono">+1</span>
                     </button>
-                    <button id="btn-gather-raw_silicon" onclick="manualGather('raw_silicon')" class="w-full btn-industrial rounded py-2 px-3 flex justify-between items-center text-cyan-400 has-tooltip hidden">
+                    <button id="btn-gather-raw_silicon" onclick="manualGather('raw_silicon')" class="w-full btn-industrial rounded py-1.5 md:py-2 px-3 flex justify-between items-center text-cyan-400 has-tooltip hidden">
                         <span class="flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" class="inline-block"><polygon points="12,3 19,10 12,21 5,10" fill="#082f49" stroke="#0ea5e9" stroke-width="1.5"/><polygon points="12,3 12,21 5,10" fill="#0c4a6e" opacity="0.7"/></svg>
                             <span class="font-mono text-sm">Extract Silicon</span>
                         </span>
                         <span class="text-xs opacity-50 font-mono">+1</span>
                     </button>
-                    <button id="btn-gather-raw_copper" onclick="manualGather('raw_copper')" class="w-full btn-industrial rounded py-2 px-3 flex justify-between items-center text-amber-500 has-tooltip hidden">
+                    <button id="btn-gather-raw_copper" onclick="manualGather('raw_copper')" class="w-full btn-industrial rounded py-1.5 md:py-2 px-3 flex justify-between items-center text-amber-500 has-tooltip hidden">
                         <span class="flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" class="inline-block"><path d="M7 4 L17 4 L21 12 L17 20 L7 20 L3 12 Z" fill="#451a03" stroke="#d97706" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="2" fill="#f59e0b"/></svg>
                             <span class="font-mono text-sm">Extract Copper</span>
@@ -156,8 +160,8 @@
             </div>
 
             <!-- Inventory List -->
-            <div class="flex-1 overflow-y-auto p-4">
-                <h2 class="text-xs uppercase text-zinc-500 tracking-wider mb-3 font-bold font-mono flex justify-between items-center">
+            <div class="flex-1 overflow-y-auto p-3 md:p-4">
+                <h2 class="text-[10px] md:text-xs uppercase text-zinc-500 tracking-wider mb-2 md:mb-3 font-bold font-mono flex justify-between items-center">
                     <span>Local Cache</span>
                     <span id="storageCount" class="text-brand font-mono text-[11px]">0 Files</span>
                 </h2>
@@ -190,7 +194,7 @@
             </nav>
 
             <!-- Permanently Anchored Crafting Queue -->
-            <div class="px-6 pt-4 shrink-0 select-none bg-zinc-950">
+            <div class="px-4 md:px-6 pt-4 shrink-0 select-none bg-zinc-950">
                 <div class="bg-zinc-900/90 border border-zinc-800 rounded-lg p-2.5 h-16 flex items-center overflow-x-auto shadow-inner relative">
                     <div id="queueContainer" class="flex items-center gap-2 w-full">
                         <div class="text-zinc-600 text-xs font-mono font-bold w-full text-center tracking-widest">COMPILE QUEUE IDLE</div>
@@ -199,7 +203,7 @@
             </div>
 
             <!-- Tab Content Area -->
-            <div class="flex-1 overflow-y-auto p-6 relative">
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 relative">
                 
                 <!-- FABRICATION TAB -->
                 <div id="tab-fabrication" class="tab-content h-full flex-col">
@@ -216,38 +220,38 @@
                     </div>
 
                     <!-- Miners Section -->
-                    <div id="minersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2">
-                            <h3 class="text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Thermal & Plasma Drills</h3>
-                            <div class="text-sm font-mono bg-zinc-950 px-3 py-1 rounded border border-zinc-800">
-                                Unassigned: <span id="unassignedMiners" class="text-crt">0</span> / <span id="totalMiners">0</span> <span class="text-zinc-500 ml-1 text-[10px] hidden sm:inline">(<span id="totalElectricMiners">0</span> Plasma)</span>
+                    <div id="minersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-4 md:p-5">
+                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2 gap-2">
+                            <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Thermal & Plasma Drills</h3>
+                            <div class="text-xs md:text-sm font-mono bg-zinc-950 px-2 py-1 md:px-3 rounded border border-zinc-800">
+                                Unassigned: <span id="unassignedMiners" class="text-crt">0</span> / <span id="totalMiners">0</span> <span class="text-zinc-500 ml-1 text-[10px] hidden md:inline">(<span id="totalElectricMiners">0</span> Plasma)</span>
                             </div>
                         </div>
-                        <p class="text-xs text-zinc-400 mb-3 font-mono">Thermal Drills consume 1 Carbon per cycle (except when extracting Carbon). Plasma variants draw ambient power.</p>
-                        <div id="minersContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+                        <p class="text-[11px] md:text-xs text-zinc-400 mb-3 font-mono">Thermal Drills consume 1 Carbon per cycle (except when extracting Carbon). Plasma variants draw ambient power.</p>
+                        <div id="minersContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4"></div>
                     </div>
 
                     <!-- Furnaces Section -->
-                    <div id="furnacesSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2">
-                            <h3 class="text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Doping Kilns & Furnaces</h3>
-                            <div class="text-sm font-mono bg-zinc-950 px-3 py-1 rounded border border-zinc-800">
-                                Unassigned: <span id="unassignedFurnaces" class="text-crt">0</span> / <span id="totalFurnaces">0</span> <span class="text-zinc-500 ml-1 text-[10px] hidden sm:inline">(<span id="totalElectricFurnaces">0</span> Plasma)</span>
+                    <div id="furnacesSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-4 md:p-5">
+                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2 gap-2">
+                            <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Doping Kilns & Furnaces</h3>
+                            <div class="text-xs md:text-sm font-mono bg-zinc-950 px-2 py-1 md:px-3 rounded border border-zinc-800">
+                                Unassigned: <span id="unassignedFurnaces" class="text-crt">0</span> / <span id="totalFurnaces">0</span> <span class="text-zinc-500 ml-1 text-[10px] hidden md:inline">(<span id="totalElectricFurnaces">0</span> Plasma)</span>
                             </div>
                         </div>
-                        <p class="text-xs text-zinc-400 mb-3 font-mono">Doping Kilns consume 1 Carbon per operation. Plasma Furnaces run without Carbon fuel.</p>
-                        <div id="furnacesContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+                        <p class="text-[11px] md:text-xs text-zinc-400 mb-3 font-mono">Doping Kilns consume 1 Carbon per operation. Plasma Furnaces run without Carbon fuel.</p>
+                        <div id="furnacesContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4"></div>
                     </div>
 
                     <!-- Assemblers Section -->
-                    <div id="assemblersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2">
-                            <h3 class="text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Logic Fabricators</h3>
-                            <div class="text-sm font-mono bg-zinc-950 px-3 py-1 rounded border border-zinc-800">
+                    <div id="assemblersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-4 md:p-5">
+                        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2 gap-2">
+                            <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono">>_ Logic Fabricators</h3>
+                            <div class="text-xs md:text-sm font-mono bg-zinc-950 px-2 py-1 md:px-3 rounded border border-zinc-800">
                                 Unassigned: <span id="unassignedAssemblers" class="text-crt">0</span> / <span id="totalAssemblers">0</span>
                             </div>
                         </div>
-                        <div id="assemblersContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+                        <div id="assemblersContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4"></div>
                     </div>
                 </div>
 
@@ -778,7 +782,7 @@
                             craftingQueue: [], machineProgress: {}
                         }, parsedState);
                         
-                        // Compatibility for older imports (if they had logic fabs doing doping)
+                        // Compatibility for older imports
                         if (state.assemblersAssigned) {
                             SMELTING_RECIPES.forEach(recipe => {
                                 if (state.assemblersAssigned[recipe]) {
