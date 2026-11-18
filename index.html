@@ -6,7 +6,7 @@
     <title>Hypostrate</title>
     
     <!-- UPDATE THIS VERSION TO TRIGGER AUTOMATIC APP REFRESH FOR INSTALLED USERS -->
-    <meta name="app-version" content="1.0.0">
+    <meta name="app-version" content="1.0.1">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#09090b">
@@ -167,7 +167,7 @@
                     <span>Local Cache</span>
                     <span id="storageCount" class="text-brand font-mono text-[10px] md:text-[11px]">0 Files</span>
                 </h2>
-                <div id="inventoryContainer" class="grid grid-cols-4 xs:grid-cols-5 md:grid-cols-2 gap-1 md:gap-1.5">
+                <div id="inventoryContainer" class="grid grid-cols-4 xs:grid-cols-5 md:grid-cols-2 gap-1.5">
                     <!-- Inventory items injected dynamically -->
                 </div>
             </div>
@@ -1470,10 +1470,11 @@
                     let itemMax = getMaxStorage(id);
                     let fillPct = Math.min(100, Math.round((amount / itemMax) * 100));
 
+                    // MOBILE LAYOUT FIX: Changed from row to flex-col on small screens, increased padding, enlarged icon text
                     invContainer.innerHTML += `
-                        <div class="relative overflow-hidden p-0.5 px-1 md:p-1 rounded bg-zinc-800/60 hover:bg-zinc-800 transition-colors border border-zinc-700/60 flex items-center justify-between gap-0.5 md:gap-1 has-tooltip cursor-help" data-tip="${item.name}&#10;Cached: ${formatNumber(amount)} / ${formatNumber(itemMax)}&#10;Cap Filled: ${fillPct}%">
-                            <span class="text-xs md:text-sm shrink-0 leading-none ${item.color}">${item.icon}</span>
-                            <span class="font-mono text-zinc-200 text-[9px] md:text-[10px] font-semibold leading-none">${formatNumber(amount)}</span>
+                        <div class="relative overflow-hidden p-1.5 md:p-1 rounded bg-zinc-800/60 hover:bg-zinc-800 transition-colors border border-zinc-700/60 flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-1.5 has-tooltip cursor-help" data-tip="${item.name}&#10;Cached: ${formatNumber(amount)} / ${formatNumber(itemMax)}&#10;Cap Filled: ${fillPct}%">
+                            <span class="text-lg md:text-sm shrink-0 leading-none ${item.color}">${item.icon}</span>
+                            <span class="font-mono text-zinc-200 text-[10px] md:text-[11px] font-semibold leading-none">${formatNumber(amount)}</span>
                             <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-zinc-900/80">
                                 <div class="h-full bg-brand transition-all" style="width: ${fillPct}%"></div>
                             </div>
