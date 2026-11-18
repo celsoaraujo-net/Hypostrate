@@ -125,11 +125,10 @@
         </div>
     </header>
 
-    <!-- Main Layout: Updated flex-col to md:flex-row for mobile stacking -->
+    <!-- Main Layout -->
     <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
         
         <!-- Left Sidebar: Manual Actions & Inventory -->
-        <!-- Updated width, height, and border logic to collapse down on mobile screens -->
         <aside class="w-full md:w-72 h-[40vh] md:h-auto bg-zinc-900 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col z-10 flex-shrink-0">
             <!-- Manual Gathering -->
             <div class="p-3 md:p-4 border-b border-zinc-800 shrink-0">
@@ -362,28 +361,74 @@
 
     <script>
         // --- PROGRESSIVE WEB APP (PWA) INITIALIZATION ---
+        // Automatically render an SVG into a high-res Canvas PNG to guarantee 
+        // iOS App Icon and Favicon compatibility without external files.
         (function initPWA() {
-            const svgIcon = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>');
-            const manifest = {
-                name: "Hypostrate",
-                short_name: "Hypostrate",
-                description: "An offline-capable incremental reality simulation game.",
-                start_url: window.location.href.split('?')[0].split('#')[0],
-                display: "standalone",
-                background_color: "#09090b",
-                theme_color: "#09090b",
-                icons: [{
-                    src: "data:image/svg+xml;charset=utf-8," + svgIcon,
-                    sizes: "192x192 512x512",
-                    type: "image/svg+xml",
-                    purpose: "any maskable"
-                }]
+            // Highly optimized CPU icon with a solid terminal-black background
+            const svgIconStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512">
+                <rect width="24" height="24" fill="#09090b"/>
+                <g stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <rect x="5" y="5" width="14" height="14" rx="2" ry="2"></rect>
+                    <rect x="9" y="9" width="6" height="6"></rect>
+                    <line x1="9" y1="2" x2="9" y2="5"></line>
+                    <line x1="15" y1="2" x2="15" y2="5"></line>
+                    <line x1="9" y1="19" x2="9" y2="22"></line>
+                    <line x1="15" y1="19" x2="15" y2="22"></line>
+                    <line x1="19" y1="9" x2="22" y2="9"></line>
+                    <line x1="19" y1="14" x2="22" y2="14"></line>
+                    <line x1="2" y1="9" x2="5" y2="9"></line>
+                    <line x1="2" y1="14" x2="5" y2="14"></line>
+                </g>
+            </svg>`;
+            
+            const svgDataUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgIconStr);
+
+            // 1. Inject standard SVG Favicon for modern desktop tabs instantly
+            const favicon = document.createElement('link');
+            favicon.rel = 'icon';
+            favicon.type = 'image/svg+xml';
+            favicon.href = svgDataUrl;
+            document.head.appendChild(favicon);
+
+            // 2. Render to PNG for iOS Apple Touch Icon & Manifest
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const pngDataUrl = canvas.toDataURL('image/png');
+                
+                // Inject iOS Icon
+                const appleIcon = document.createElement('link');
+                appleIcon.rel = 'apple-touch-icon';
+                appleIcon.href = pngDataUrl;
+                document.head.appendChild(appleIcon);
+                
+                // Inject Manifest
+                const manifest = {
+                    name: "Hypostrate",
+                    short_name: "Hypostrate",
+                    description: "An offline-capable incremental reality simulation game.",
+                    start_url: window.location.href.split('?')[0].split('#')[0],
+                    display: "standalone",
+                    background_color: "#09090b",
+                    theme_color: "#09090b",
+                    icons: [{
+                        src: pngDataUrl,
+                        sizes: "512x512",
+                        type: "image/png",
+                        purpose: "any maskable"
+                    }]
+                };
+                const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+                const manifestLink = document.createElement('link');
+                manifestLink.rel = 'manifest';
+                manifestLink.href = URL.createObjectURL(manifestBlob);
+                document.head.appendChild(manifestLink);
             };
-            const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
-            const link = document.createElement('link');
-            link.rel = 'manifest';
-            link.href = URL.createObjectURL(manifestBlob);
-            document.head.appendChild(link);
+            img.src = svgDataUrl;
         })();
 
         /* Database Definitions */
