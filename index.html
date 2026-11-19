@@ -6,7 +6,7 @@
     <title>Hypostrate</title>
     
     <!-- UPDATE THIS VERSION TO TRIGGER AUTOMATIC APP REFRESH FOR INSTALLED USERS -->
-    <meta name="app-version" content="1.10.0">
+    <meta name="app-version" content="1.10.1">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#09090b">
@@ -314,8 +314,8 @@
     <!-- Global Floating Tooltip -->
     <div id="globalTooltip" class="fixed pointer-events-none z-[100] hidden bg-zinc-900 border border-zinc-600 text-zinc-200 text-xs px-3 py-2 rounded shadow-2xl font-mono backdrop-blur-md whitespace-pre leading-relaxed"></div>
 
-    <!-- Modal Dialog -->
-    <div id="customModal" class="hidden fixed inset-0 bg-zinc-950/90 z-[60] flex items-center justify-center backdrop-blur-sm">
+    <!-- Modal Dialog (Increased z-index to 80 to overlay System Modal at 70) -->
+    <div id="customModal" class="hidden fixed inset-0 bg-zinc-950/90 z-[80] flex items-center justify-center backdrop-blur-sm">
         <div class="bg-zinc-900 border border-zinc-700 p-6 rounded-lg shadow-2xl max-w-lg w-full mx-4 flex flex-col gap-4">
             <h2 id="modalTitle" class="text-xl font-bold text-brand font-mono">Modal Title</h2>
             <p id="modalDesc" class="text-sm text-zinc-300 font-mono">Description here.</p>
@@ -2166,26 +2166,36 @@
 
         window.CloudSync = {
             isReady: false,
+            isMock: false,
             db: null,
             auth: null,
             user: null,
             async init() {
                 if (!firebaseConfig) {
-                    console.log("No Firebase config found. Cloud sync disabled.");
-                    return false;
+                    console.log("No Firebase config found. Using local storage mock for Cloud Sync.");
+                    this.isReady = true;
+                    this.isMock = true;
+                    return true;
                 }
-                const app = initializeApp(firebaseConfig);
-                this.db = getFirestore(app);
-                this.auth = getAuth(app);
-                
-                if (customToken) {
-                    await signInWithCustomToken(this.auth, customToken);
-                } else {
-                    await signInAnonymously(this.auth);
+                try {
+                    const app = initializeApp(firebaseConfig);
+                    this.db = getFirestore(app);
+                    this.auth = getAuth(app);
+                    
+                    if (customToken) {
+                        await signInWithCustomToken(this.auth, customToken);
+                    } else {
+                        await signInAnonymously(this.auth);
+                    }
+                    this.user = this.auth.currentUser;
+                    this.isReady = true;
+                    return true;
+                } catch (e) {
+                    console.error("Firebase Init failed. Falling back to local mock.", e);
+                    this.isReady = true;
+                    this.isMock = true;
+                    return true;
                 }
-                this.user = this.auth.currentUser;
-                this.isReady = true;
-                return true;
             },
             async generateCode() {
                 const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -2197,7 +2207,19 @@
                 return code;
             },
             async pushState(stateObj, code) {
-                if (!this.isReady || !this.user) return false;
+                if (!this.isReady) return false;
+                
+                if (this.isMock) {
+                    try {
+                        localStorage.setItem('mock_sync_' + code, JSON.stringify(stateObj));
+                        return true;
+                    } catch(e) {
+                        return false;
+                    }
+                }
+
+                if (!this.user) return false;
+                
                 try {
                     const ref = doc(this.db, 'artifacts', appId, 'public', 'data', 'sync_saves', code);
                     const dataToSave = {
@@ -2212,7 +2234,19 @@
                 }
             },
             async pullState(code) {
-                if (!this.isReady || !this.user) return null;
+                if (!this.isReady) return null;
+
+                if (this.isMock) {
+                    try {
+                        const data = localStorage.getItem('mock_sync_' + code);
+                        return data ? JSON.parse(data) : null;
+                    } catch(e) {
+                        return null;
+                    }
+                }
+
+                if (!this.user) return null;
+                
                 try {
                     const ref = doc(this.db, 'artifacts', appId, 'public', 'data', 'sync_saves', code);
                     const snap = await getDoc(ref);
