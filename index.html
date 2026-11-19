@@ -6,7 +6,7 @@
     <title>Hypostrate</title>
     
     <!-- UPDATE THIS VERSION TO TRIGGER AUTOMATIC APP REFRESH FOR INSTALLED USERS -->
-    <meta name="app-version" content="1.10.4">
+    <meta name="app-version" content="1.10.5">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#09090b">
@@ -730,8 +730,8 @@
             machineProgress: {}
         };
         
-        let lastInventoryAmount = {};
-        let inventoryGlows = {};
+        let itemDeltas = {};
+        let lastTickAmount = {};
 
         function getItemAmount(id) {
             return (state.inventory && state.inventory[id]) || 0;
@@ -1559,13 +1559,26 @@
                 }
             }
 
-            // Clear expired inventory glows
-            let now = Date.now();
-            for (let id in inventoryGlows) {
-                if (inventoryGlows[id] && inventoryGlows[id].expires <= now) {
-                    inventoryGlows[id] = null;
-                    stateChanged = true;
+            // Calculate Inventory Trend & Deltas via EMA to prevent flashing
+            for (let id in ITEMS) {
+                let current = getItemAmount(id);
+                let prev = lastTickAmount[id];
+                if (prev !== undefined) {
+                    let diff = current - prev;
+                    let oldDelta = itemDeltas[id] || 0;
+                    let newDelta = oldDelta * 0.8 + diff * 0.2;
+                    itemDeltas[id] = newDelta;
+                    
+                    let wasGreen = oldDelta > 0.05;
+                    let isGreen = newDelta > 0.05;
+                    let wasRed = oldDelta < -0.05;
+                    let isRed = newDelta < -0.05;
+                    
+                    if (wasGreen !== isGreen || wasRed !== isRed) {
+                        stateChanged = true;
+                    }
                 }
+                lastTickAmount[id] = current;
             }
 
             if (stateChanged) updateUI();
@@ -1730,7 +1743,6 @@
             // Inventory Sidebar
             const invContainer = document.getElementById('inventoryContainer');
             let totalItemTypes = 0;
-            let now = Date.now();
             
             if (invContainer) {
                 invContainer.innerHTML = '';
@@ -1743,24 +1755,14 @@
                     let itemMax = getMaxStorage(id);
                     let fillPct = Math.min(100, Math.round((amount / itemMax) * 100));
 
-                    // Evaluate Trend & apply glow settings
-                    let prevAmount = lastInventoryAmount[id];
-                    if (prevAmount !== undefined) {
-                        if (amount > prevAmount) {
-                            inventoryGlows[id] = { type: 'green', expires: now + 2000 };
-                        } else if (amount < prevAmount) {
-                            inventoryGlows[id] = { type: 'red', expires: now + 2000 };
-                        }
-                    }
-                    lastInventoryAmount[id] = amount;
-
+                    // Relying on Exponential Moving Average Deltas calculated in gameTick()
+                    let delta = itemDeltas[id] || 0;
                     let glowClass = 'bg-zinc-800/60 hover:bg-zinc-800 border-zinc-700/60';
-                    if (inventoryGlows[id] && inventoryGlows[id].expires > now) {
-                        if (inventoryGlows[id].type === 'green') {
-                            glowClass = 'bg-emerald-900/30 hover:bg-emerald-900/40 border-brand/60 shadow-[0_0_8px_rgba(16,185,129,0.3)]';
-                        } else if (inventoryGlows[id].type === 'red') {
-                            glowClass = 'bg-red-900/30 hover:bg-red-900/40 border-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.3)]';
-                        }
+                    
+                    if (delta > 0.05) { // Meaningful trend of net positive production
+                        glowClass = 'bg-emerald-900/30 hover:bg-emerald-900/40 border-brand/60 shadow-[0_0_8px_rgba(16,185,129,0.3)]';
+                    } else if (delta < -0.05) { // Meaningful trend of net negative deficit
+                        glowClass = 'bg-red-900/30 hover:bg-red-900/40 border-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.3)]';
                     }
 
                     invContainer.innerHTML += `
