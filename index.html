@@ -6,7 +6,7 @@
     <title>Hypostrate</title>
     
     <!-- UPDATE THIS VERSION TO TRIGGER AUTOMATIC APP REFRESH FOR INSTALLED USERS -->
-    <meta name="app-version" content="1.0.6">
+    <meta name="app-version" content="1.0.8">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#09090b">
@@ -1812,19 +1812,19 @@
                 let borderClass = isUnlocked ? 'border-brand/30 bg-emerald-950/20 opacity-75' : 'border-zinc-700 bg-zinc-900';
                 
                 let nodeHtml = `
-                    <div class="p-3 rounded border ${borderClass} flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-4 shadow-sm">
-                        <div class="flex gap-3 items-center min-w-0">
-                            <div class="w-10 h-10 bg-zinc-950 rounded flex items-center justify-center text-xl border border-zinc-800 shadow-inner shrink-0">
+                    <div class="p-3 rounded border ${borderClass} flex flex-col sm:flex-row justify-between sm:items-start gap-2 sm:gap-4 shadow-sm">
+                        <div class="flex gap-3 items-start min-w-0">
+                            <div class="w-10 h-10 bg-zinc-950 rounded flex items-center justify-center text-xl border border-zinc-800 shadow-inner shrink-0 mt-0.5">
                                 ${tech.icon}
                             </div>
-                            <div class="min-w-0">
-                                <h3 class="text-sm font-bold text-zinc-200 truncate font-mono">${tech.name}</h3>
-                                <p class="text-xs text-zinc-400 leading-tight mb-1 truncate">${tech.desc}</p>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-sm font-bold text-zinc-200 font-mono leading-tight mb-0.5">${tech.name}</h3>
+                                <p class="text-xs text-zinc-400 leading-tight mb-2">${tech.desc}</p>
                                 ${!isUnlocked ? `<div class="flex flex-wrap gap-1">${renderCost(tech.cost)}</div>` : ''}
-                                ${isUnlocked && visibleUnlocks.length > 0 ? `<div class="text-[10px] uppercase tracking-wider text-brand/70 font-mono truncate">Unlocks: ${visibleUnlocks.map(u => ITEMS[u].name).join(', ')}</div>` : ''}
+                                ${isUnlocked && visibleUnlocks.length > 0 ? `<div class="text-[10px] uppercase tracking-wider text-brand/70 font-mono">Unlocks: ${visibleUnlocks.map(u => ITEMS[u].name).join(', ')}</div>` : ''}
                             </div>
                         </div>
-                        <div class="flex items-center justify-end shrink-0 font-mono">
+                        <div class="flex items-center justify-end shrink-0 font-mono sm:mt-1">
                             ${isUnlocked 
                                 ? `<span class="text-emerald-500 font-bold text-[10px] bg-emerald-950/50 px-2 py-1 rounded border border-emerald-900">✓ COMPILED</span>`
                                 : `<div class="has-tooltip" data-tip="${getCostString(tech.cost, 1, null, true)}">
