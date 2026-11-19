@@ -232,54 +232,54 @@
                     </div>
 
                     <!-- Miners Section -->
-                    <div id="minersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-3 md:p-5 transition-all">
-                        <div class="flex justify-between items-center mb-1 border-zinc-800 pb-2 gap-2 cursor-pointer group" onclick="toggleAutomationSection('miners')">
-                            <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono">
-                                <span id="toggle-icon-miners" class="text-zinc-500 group-hover:text-brand transition-colors text-sm">[-]</span>
+                    <details id="minersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-3 md:p-5 transition-all group" open>
+                        <summary class="flex justify-between items-center mb-1 border-zinc-800 pb-2 gap-2 cursor-pointer select-none">
+                            <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono group-hover:text-brand/80 transition-colors">
+                                <span class="text-zinc-500 transition-transform duration-200 text-sm group-open:rotate-90 group-hover:text-brand inline-block">▶</span>
                                 >_ Thermal & Plasma Drills
                             </h3>
                             <div class="text-xs md:text-sm font-mono bg-zinc-950 px-2 py-1 md:px-3 rounded border border-zinc-800">
                                 Unassigned: <span id="unassignedMiners" class="text-crt">0</span> / <span id="totalMiners">0</span> <span class="text-zinc-500 ml-1 text-[10px] hidden md:inline">(<span id="totalElectricMiners">0</span> Plasma)</span>
                             </div>
-                        </div>
+                        </summary>
                         <div id="content-miners" class="pt-2 border-t border-zinc-800 mt-2">
                             <p class="text-[10px] md:text-xs text-zinc-400 mb-3 font-mono">Thermal Drills consume 1 Carbon per cycle (except when extracting Carbon). Plasma variants draw ambient power.</p>
                             <div id="minersContainer" class="grid grid-cols-1 xs:grid-cols-2 gap-2 md:gap-4"></div>
                         </div>
-                    </div>
+                    </details>
 
                     <!-- Furnaces Section -->
-                    <div id="furnacesSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-3 md:p-5 transition-all">
-                        <div class="flex justify-between items-center mb-1 border-zinc-800 pb-2 gap-2 cursor-pointer group" onclick="toggleAutomationSection('furnaces')">
-                            <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono">
-                                <span id="toggle-icon-furnaces" class="text-zinc-500 group-hover:text-brand transition-colors text-sm">[-]</span>
+                    <details id="furnacesSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-3 md:p-5 transition-all group" open>
+                        <summary class="flex justify-between items-center mb-1 border-zinc-800 pb-2 gap-2 cursor-pointer select-none">
+                            <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono group-hover:text-brand/80 transition-colors">
+                                <span class="text-zinc-500 transition-transform duration-200 text-sm group-open:rotate-90 group-hover:text-brand inline-block">▶</span>
                                 >_ Doping Kilns & Furnaces
                             </h3>
                             <div class="text-xs md:text-sm font-mono bg-zinc-950 px-2 py-1 md:px-3 rounded border border-zinc-800">
                                 Unassigned: <span id="unassignedFurnaces" class="text-crt">0</span> / <span id="totalFurnaces">0</span> <span class="text-zinc-500 ml-1 text-[10px] hidden md:inline">(<span id="totalElectricFurnaces">0</span> Plasma)</span>
                             </div>
-                        </div>
+                        </summary>
                         <div id="content-furnaces" class="pt-2 border-t border-zinc-800 mt-2">
                             <p class="text-[10px] md:text-xs text-zinc-400 mb-3 font-mono">Doping Kilns consume 1 Carbon per operation. Plasma Furnaces run without Carbon fuel.</p>
                             <div id="furnacesContainer" class="grid grid-cols-1 xs:grid-cols-2 gap-2 md:gap-4"></div>
                         </div>
-                    </div>
+                    </details>
 
                     <!-- Assemblers Section -->
-                    <div id="assemblersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-3 md:p-5 transition-all">
-                        <div class="flex justify-between items-center mb-1 border-zinc-800 pb-2 gap-2 cursor-pointer group" onclick="toggleAutomationSection('assemblers')">
-                            <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono">
-                                <span id="toggle-icon-assemblers" class="text-zinc-500 group-hover:text-brand transition-colors text-sm">[-]</span>
+                    <details id="assemblersSection" class="hidden bg-zinc-900 border border-zinc-800 rounded-lg p-3 md:p-5 transition-all group" open>
+                        <summary class="flex justify-between items-center mb-1 border-zinc-800 pb-2 gap-2 cursor-pointer select-none">
+                            <h3 class="text-base md:text-lg font-bold text-brand flex items-center gap-2 font-mono group-hover:text-brand/80 transition-colors">
+                                <span class="text-zinc-500 transition-transform duration-200 text-sm group-open:rotate-90 group-hover:text-brand inline-block">▶</span>
                                 >_ Logic Fabricators
                             </h3>
                             <div class="text-xs md:text-sm font-mono bg-zinc-950 px-2 py-1 md:px-3 rounded border border-zinc-800">
                                 Unassigned: <span id="unassignedAssemblers" class="text-crt">0</span> / <span id="totalAssemblers">0</span>
                             </div>
-                        </div>
+                        </summary>
                         <div id="content-assemblers" class="pt-2 border-t border-zinc-800 mt-2">
                             <div id="assemblersContainer" class="grid grid-cols-1 xs:grid-cols-2 gap-2 md:gap-4"></div>
                         </div>
-                    </div>
+                    </details>
                 </div>
 
                 <!-- STORAGE TAB -->
@@ -695,26 +695,6 @@
             racksAssigned: {},
             craftingQueue: [],
             machineProgress: {}
-        };
-
-        const automationUIState = {
-            miners: true,
-            furnaces: true,
-            assemblers: true
-        };
-
-        window.toggleAutomationSection = function(section) {
-            automationUIState[section] = !automationUIState[section];
-            const content = document.getElementById(`content-${section}`);
-            const icon = document.getElementById(`toggle-icon-${section}`);
-            
-            if (automationUIState[section]) {
-                content.classList.remove('hidden');
-                icon.innerText = '[-]';
-            } else {
-                content.classList.add('hidden');
-                icon.innerText = '[+]';
-            }
         };
 
         function getItemAmount(id) {
@@ -1680,7 +1660,7 @@
 
             // Automation: Miners UI
             const minersContainer = document.getElementById('minersContainer');
-            if (hasMinersUnlocked && automationUIState.miners) {
+            if (hasMinersUnlocked) {
                 const availableRaw = RAW_RESOURCES.filter(resId => isItemVisible(resId));
                 minersContainer.innerHTML = availableRaw.map(id => {
                     let item = ITEMS[id];
@@ -1706,7 +1686,7 @@
 
             // Automation: Furnaces UI
             const furContainer = document.getElementById('furnacesContainer');
-            if (hasFurnacesUnlocked && automationUIState.furnaces) {
+            if (hasFurnacesUnlocked) {
                 const furnaceRecipes = (state.unlockedRecipes || []).filter(id => SMELTING_RECIPES.includes(id));
                 furContainer.innerHTML = furnaceRecipes.map(id => {
                     let item = ITEMS[id];
@@ -1731,7 +1711,7 @@
 
             // Automation: Assemblers UI
             const asmContainer = document.getElementById('assemblersContainer');
-            if (hasAssemblersUnlocked && automationUIState.assemblers) {
+            if (hasAssemblersUnlocked) {
                 const automatableRecipes = (state.unlockedRecipes || []).filter(id => ITEMS[id] && ITEMS[id].cost && !SMELTING_RECIPES.includes(id));
                 asmContainer.innerHTML = automatableRecipes.map(id => {
                     let item = ITEMS[id];
