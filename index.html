@@ -6,7 +6,7 @@
     <title>Hypostrate</title>
     
     <!-- UPDATE THIS VERSION TO TRIGGER AUTOMATIC APP REFRESH FOR INSTALLED USERS -->
-    <meta name="app-version" content="1.0.5">
+    <meta name="app-version" content="1.0.6">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#09090b">
@@ -108,6 +108,13 @@
             border-bottom: 2px solid #10b981;
             color: #f4f4f5;
             background-color: #18181b;
+        }
+        
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
         }
     </style>
 </head>
@@ -1809,7 +1816,8 @@
             // Research Tab UI
             const resContainer = document.getElementById('researchContainer');
             let canUnlockAny = false;
-            let resHtml = '';
+            let activeResHtml = '';
+            let completedResHtml = '';
             
             for (let [techId, tech] of Object.entries(TECH_TREE)) {
                 let isUnlocked = state.unlockedTechs.includes(techId);
@@ -1823,7 +1831,7 @@
                 let visibleUnlocks = tech.unlocks || [];
                 let borderClass = isUnlocked ? 'border-brand/30 bg-emerald-950/20 opacity-75' : 'border-zinc-700 bg-zinc-900';
                 
-                resHtml += `
+                let nodeHtml = `
                     <div class="p-3 rounded border ${borderClass} flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-4 shadow-sm">
                         <div class="flex gap-3 items-center min-w-0">
                             <div class="w-10 h-10 bg-zinc-950 rounded flex items-center justify-center text-xl border border-zinc-800 shadow-inner shrink-0">
@@ -1846,8 +1854,31 @@
                         </div>
                     </div>
                 `;
+
+                if (isUnlocked) {
+                    completedResHtml += nodeHtml;
+                } else {
+                    activeResHtml += nodeHtml;
+                }
             }
-            resContainer.innerHTML = resHtml;
+
+            let finalResHtml = activeResHtml;
+            if (completedResHtml) {
+                finalResHtml += `
+                    <details class="mt-8 border-t border-zinc-800 pt-4 group">
+                        <summary class="cursor-pointer text-xs font-bold text-zinc-500 font-mono uppercase tracking-wider select-none hover:text-zinc-300 transition-colors flex items-center gap-2 mb-2">
+                            <span class="group-open:hidden">[+]</span>
+                            <span class="hidden group-open:inline">[-]</span>
+                            Compiled Architecture
+                        </summary>
+                        <div class="space-y-2 mt-3 opacity-80">
+                            ${completedResHtml}
+                        </div>
+                    </details>
+                `;
+            }
+
+            resContainer.innerHTML = finalResHtml;
 
             if(canUnlockAny && document.getElementById('tab-research').classList.contains('hidden')) {
                 document.getElementById('techBadge').classList.remove('hidden');
@@ -1949,3 +1980,6 @@
     </script>
 </body>
 </html>
+```eof
+
+I've generated the updated HTML file. I bumped the version metadata from 1.0.5 to 1.0.6 to trigger the automatic app refresh. I also adjusted the `updateUI()` function logic to split out unlocked tech nodes from active ones. Completed research is now appended inside a `<details>` block directly below the active nodes, which will be styled and collapsed by default. Additionally, I added a tiny bit of CSS to ensure WebKit browsers don't double up on the arrow marker for the newly added `<summary>` element.
