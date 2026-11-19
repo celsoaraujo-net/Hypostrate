@@ -6,7 +6,7 @@
     <title>Hypostrate</title>
     
     <!-- UPDATE THIS VERSION TO TRIGGER AUTOMATIC APP REFRESH FOR INSTALLED USERS -->
-    <meta name="app-version" content="1.0.8">
+    <meta name="app-version" content="1.0.7">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#09090b">
@@ -220,8 +220,8 @@
                 <!-- FABRICATION TAB -->
                 <div id="tab-fabrication" class="tab-content h-full flex-col">
                     <div id="noCraftingMsg" class="hidden flex-1 flex items-center justify-center text-zinc-600 font-mono text-center border-2 border-dashed border-zinc-800 rounded-lg p-10">No schematics loaded.</div>
-                    <div id="craftingContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 pb-10">
-                        <!-- Recipes injected here -->
+                    <div id="craftingContainer" class="flex flex-col gap-3 pb-10">
+                        <!-- Categories injected here -->
                     </div>
                 </div>
 
@@ -678,6 +678,15 @@
                 req: ['data_storage', 'heuristic_algorithms', 'superconductivity'],
                 unlocks: ['server_rack']
             }
+        };
+
+        const CATEGORY_NAMES = {
+            'raw': 'Raw Materials',
+            'intermediate': 'Intermediate Components',
+            'advanced': 'Advanced Electronics',
+            'science': 'Data & Heuristics',
+            'storage': 'Memory Architecture',
+            'machine': 'Infrastructure & Machinery'
         };
 
         const CRAFTING_ORDER = ['silicon_wafer', 'copper_trace', 'superconductor', 'logic_gate', 'bonding_wire', 'microchip', 'binary_data', 'neural_data', 'doping_kiln', 'plasma_furnace', 'thermal_drill', 'plasma_drill', 'logic_fab', 'data_reel', 'server_rack'];
@@ -1585,40 +1594,64 @@
                     if (noCraftingMsg) noCraftingMsg.classList.remove('hidden');
                 } else {
                     if (noCraftingMsg) noCraftingMsg.classList.add('hidden');
-                    craftContainer.innerHTML = visibleRecipes.map(id => {
-                        let item = ITEMS[id];
-                        let currentWithQueue = getItemAmount(id) + getQueuedAmount(id);
-                        let yieldAmt = item.yield || 1;
-                        let itemMax = getMaxStorage(id);
+                    
+                    const grouped = {};
+                    visibleRecipes.forEach(id => {
+                        let type = ITEMS[id].type || 'misc';
+                        if (!grouped[type]) grouped[type] = [];
+                        grouped[type].push(id);
+                    });
 
-                        return `
-                            <div class="bg-zinc-900 border border-zinc-800 p-2 rounded flex flex-col justify-between gap-2 shadow-sm min-w-0">
-                                <div class="flex justify-between items-center w-full gap-1">
-                                    <div class="flex items-center gap-1.5 min-w-0">
-                                        <span class="text-lg shrink-0">${item.icon}</span>
-                                        <h3 class="font-bold text-zinc-200 text-[11px] sm:text-xs truncate font-mono">${item.name}</h3>
+                    let fabHtml = '';
+                    for (let type of Object.keys(CATEGORY_NAMES)) {
+                        if (grouped[type] && grouped[type].length > 0) {
+                            fabHtml += `
+                                <details class="bg-zinc-900 border border-zinc-800 rounded-lg group" open>
+                                    <summary class="flex items-center gap-2 p-3 cursor-pointer select-none border-b border-zinc-800/50">
+                                        <span class="text-zinc-500 transition-transform duration-200 text-sm group-open:rotate-90 group-hover:text-brand inline-block">▶</span>
+                                        <h3 class="text-sm font-bold text-brand font-mono uppercase tracking-wider">${CATEGORY_NAMES[type]}</h3>
+                                    </summary>
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 p-3 bg-zinc-950/30 rounded-b-lg">
+                                        ${grouped[type].map(id => {
+                                            let item = ITEMS[id];
+                                            let currentWithQueue = getItemAmount(id) + getQueuedAmount(id);
+                                            let yieldAmt = item.yield || 1;
+                                            let itemMax = getMaxStorage(id);
+
+                                            return \`
+                                                <div class="bg-zinc-900 border border-zinc-800 p-2 rounded flex flex-col justify-between gap-2 shadow-sm min-w-0">
+                                                    <div class="flex justify-between items-center w-full gap-1">
+                                                        <div class="flex items-center gap-1.5 min-w-0">
+                                                            <span class="text-lg shrink-0">\${item.icon}</span>
+                                                            <h3 class="font-bold text-zinc-200 text-[11px] sm:text-xs truncate font-mono">\${item.name}</h3>
+                                                        </div>
+                                                        <span class="text-[9px] bg-zinc-950 border border-zinc-800 px-1 py-0.5 rounded font-mono text-brand shrink-0">
+                                                            \${formatNumber(getItemAmount(id))}
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex flex-wrap gap-1">
+                                                        \${renderCost(item.cost)}
+                                                    </div>
+                                                    <div class="mt-auto pt-1 flex gap-1 w-full font-mono">
+                                                        <div class="has-tooltip flex-1 flex" data-tip="\${getCostString(item.cost, 1, id)}">
+                                                            <button onclick="craftItem('\${id}', 1)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" \${!canAfford(item.cost, 1) || currentWithQueue + yieldAmt > itemMax ? 'disabled' : ''}>1x</button>
+                                                        </div>
+                                                        <div class="has-tooltip flex-1 flex" data-tip="\${getCostString(item.cost, 10, id)}">
+                                                            <button onclick="craftItem('\${id}', 10)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" \${!canAfford(item.cost, 10) || currentWithQueue + (yieldAmt * 10) > itemMax ? 'disabled' : ''}>10x</button>
+                                                        </div>
+                                                        <div class="has-tooltip flex-1 flex" data-tip="\${getCostString(item.cost, 25, id)}">
+                                                            <button onclick="craftItem('\${id}', 25)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" \${!canAfford(item.cost, 25) || currentWithQueue + (yieldAmt * 25) > itemMax ? 'disabled' : ''}>25x</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            \`;
+                                        }).join('')}
                                     </div>
-                                    <span class="text-[9px] bg-zinc-950 border border-zinc-800 px-1 py-0.5 rounded font-mono text-brand shrink-0">
-                                        ${formatNumber(getItemAmount(id))}
-                                    </span>
-                                </div>
-                                <div class="flex flex-wrap gap-1">
-                                    ${renderCost(item.cost)}
-                                </div>
-                                <div class="mt-auto pt-1 flex gap-1 w-full font-mono">
-                                    <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 1, id)}">
-                                        <button onclick="craftItem('${id}', 1)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 1) || currentWithQueue + yieldAmt > itemMax ? 'disabled' : ''}>1x</button>
-                                    </div>
-                                    <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 10, id)}">
-                                        <button onclick="craftItem('${id}', 10)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 10) || currentWithQueue + (yieldAmt * 10) > itemMax ? 'disabled' : ''}>10x</button>
-                                    </div>
-                                    <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 25, id)}">
-                                        <button onclick="craftItem('${id}', 25)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 25) || currentWithQueue + (yieldAmt * 25) > itemMax ? 'disabled' : ''}>25x</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
+                                </details>
+                            `;
+                        }
+                    }
+                    craftContainer.innerHTML = fabHtml;
                 }
             }
 
@@ -1735,7 +1768,6 @@
             }
 
             // Storage Allocation UI
-            const storageAllocationContainer = document.getElementById('storageAllocationContainer');
             const storageSection = document.getElementById('storageSection');
             
             if (hasStorageUnlocked) {
@@ -1747,50 +1779,73 @@
                             ${hasSteelUnlocked ? `<span class="bg-zinc-950 px-2 py-0.5 sm:px-3 sm:py-1 rounded border border-zinc-800">Racks: <b class="text-blue-400">${getItemAmount('server_rack')}</b></span>` : ''}
                         </div>
                     </div>
-                    <div id="storageAllocationContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5"></div>
+                    <div id="storageAllocationContainer" class="flex flex-col gap-3"></div>
                 `;
 
                 const newContainer = document.getElementById('storageAllocationContainer');
                 const allAllocatable = [...new Set([...RAW_RESOURCES, ...(state.unlockedRecipes || [])])].filter(id => isItemVisible(id));
 
-                newContainer.innerHTML = allAllocatable.map(id => {
-                    let item = ITEMS[id];
-                    let iCount = (state.reelsAssigned && state.reelsAssigned[id]) || 0;
-                    let sCount = (state.racksAssigned && state.racksAssigned[id]) || 0;
-                    let curMax = getMaxStorage(id);
-                    
-                    let hasIron = getItemAmount('data_reel') > 0;
-                    let hasSteel = getItemAmount('server_rack') > 0;
+                const groupedAlloc = {};
+                allAllocatable.forEach(id => {
+                    let type = ITEMS[id].type || 'misc';
+                    if (!groupedAlloc[type]) groupedAlloc[type] = [];
+                    groupedAlloc[type].push(id);
+                });
 
-                    let ironBtn = `<button onclick="installChest('${id}', 'reel')" class="btn-industrial px-2 py-1.5 rounded text-[10px] font-bold text-zinc-300 w-full flex items-center justify-between transition-opacity font-mono ${!hasIron ? 'opacity-50 cursor-not-allowed' : 'hover:border-zinc-500/50'}" ${!hasIron ? 'disabled' : ''} title="Costs 1 Data Reel">
-                        <span>Mount Reel</span>
-                        <span class="text-zinc-400 font-mono">+250</span>
-                    </button>`;
+                let storageHtml = '';
+                for (let type of Object.keys(CATEGORY_NAMES)) {
+                    if (groupedAlloc[type] && groupedAlloc[type].length > 0) {
+                        storageHtml += `
+                            <details class="bg-zinc-950 border border-zinc-800/80 rounded-lg group" open>
+                                <summary class="flex items-center gap-2 p-2.5 cursor-pointer select-none border-b border-zinc-800/50">
+                                    <span class="text-zinc-500 transition-transform duration-200 text-sm group-open:rotate-90 group-hover:text-brand inline-block">▶</span>
+                                    <h3 class="text-xs font-bold text-zinc-300 font-mono uppercase tracking-wider">${CATEGORY_NAMES[type]}</h3>
+                                </summary>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 p-2.5 bg-zinc-900/20 rounded-b-lg">
+                                    ${groupedAlloc[type].map(id => {
+                                        let item = ITEMS[id];
+                                        let iCount = (state.reelsAssigned && state.reelsAssigned[id]) || 0;
+                                        let sCount = (state.racksAssigned && state.racksAssigned[id]) || 0;
+                                        let curMax = getMaxStorage(id);
+                                        
+                                        let hasIron = getItemAmount('data_reel') > 0;
+                                        let hasSteel = getItemAmount('server_rack') > 0;
 
-                    let steelBtn = hasSteelUnlocked ? `<button onclick="installChest('${id}', 'rack')" class="btn-industrial px-2 py-1.5 rounded text-[10px] font-bold text-zinc-300 w-full flex items-center justify-between transition-opacity font-mono ${!hasSteel || iCount <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-400/50'}" ${!hasSteel || iCount <= 0 ? 'disabled' : ''} title="Costs 1 Server Rack & Replaces 1 Mounted Reel">
-                        <span class="${iCount <= 0 ? 'text-zinc-500' : ''}">Deploy Rack</span>
-                        <span class="text-blue-400 font-mono">+750</span>
-                    </button>` : '';
+                                        let ironBtn = \`<button onclick="installChest('\${id}', 'reel')" class="btn-industrial px-2 py-1.5 rounded text-[10px] font-bold text-zinc-300 w-full flex items-center justify-between transition-opacity font-mono \${!hasIron ? 'opacity-50 cursor-not-allowed' : 'hover:border-zinc-500/50'}" \${!hasIron ? 'disabled' : ''} title="Costs 1 Data Reel">
+                                            <span>Mount Reel</span>
+                                            <span class="text-zinc-400 font-mono">+250</span>
+                                        </button>\`;
 
-                    return `
-                        <div class="bg-zinc-950 border border-zinc-800/80 p-2 rounded flex flex-col gap-2">
-                            <div class="flex justify-between items-center gap-1">
-                                <div class="flex items-center gap-1.5 min-w-0 pr-1">
-                                    <span class="text-lg shrink-0 leading-none">${item.icon}</span>
-                                    <span class="text-[10px] text-brand font-mono leading-none font-bold truncate">Cap: ${formatNumber(curMax)}</span>
+                                        let steelBtn = hasSteelUnlocked ? \`<button onclick="installChest('\${id}', 'rack')" class="btn-industrial px-2 py-1.5 rounded text-[10px] font-bold text-zinc-300 w-full flex items-center justify-between transition-opacity font-mono \${!hasSteel || iCount <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-400/50'}" \${!hasSteel || iCount <= 0 ? 'disabled' : ''} title="Costs 1 Server Rack & Replaces 1 Mounted Reel">
+                                            <span class="\${iCount <= 0 ? 'text-zinc-500' : ''}">Deploy Rack</span>
+                                            <span class="text-blue-400 font-mono">+750</span>
+                                        </button>\` : '';
+
+                                        return \`
+                                            <div class="bg-zinc-950 border border-zinc-800/80 p-2 rounded flex flex-col gap-2">
+                                                <div class="flex justify-between items-center gap-1">
+                                                    <div class="flex items-center gap-1.5 min-w-0 pr-1">
+                                                        <span class="text-lg shrink-0 leading-none">\${item.icon}</span>
+                                                        <span class="text-[10px] text-brand font-mono leading-none font-bold truncate">Cap: \${formatNumber(curMax)}</span>
+                                                    </div>
+                                                    <div class="text-[9px] font-mono text-zinc-500 flex gap-1.5 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 shrink-0">
+                                                        <span class="\${iCount > 0 ? 'text-zinc-300 font-bold' : ''}" title="Mounted Reels">RL: \${iCount}</span>
+                                                        \${hasSteelUnlocked ? \`<span class="\${sCount > 0 ? 'text-blue-300 font-bold' : ''}" title="Deployed Server Racks">RK: \${sCount}</span>\` : ''}
+                                                    </div>
+                                                </div>
+                                                <div class="flex flex-col gap-1 w-full">
+                                                    \${ironBtn}
+                                                    \${steelBtn}
+                                                </div>
+                                            </div>
+                                        \`;
+                                    }).join('')}
                                 </div>
-                                <div class="text-[9px] font-mono text-zinc-500 flex gap-1.5 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 shrink-0">
-                                    <span class="${iCount > 0 ? 'text-zinc-300 font-bold' : ''}" title="Mounted Reels">RL: ${iCount}</span>
-                                    ${hasSteelUnlocked ? `<span class="${sCount > 0 ? 'text-blue-300 font-bold' : ''}" title="Deployed Server Racks">RK: ${sCount}</span>` : ''}
-                                </div>
-                            </div>
-                            <div class="flex flex-col gap-1 w-full">
-                                ${ironBtn}
-                                ${steelBtn}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+                            </details>
+                        `;
+                    }
+                }
+                newContainer.innerHTML = storageHtml;
             }
 
             // Research Tab UI
