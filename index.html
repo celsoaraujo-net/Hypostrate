@@ -6,7 +6,7 @@
     <title>Hypostrate</title>
     
     <!-- UPDATE THIS VERSION TO TRIGGER AUTOMATIC APP REFRESH FOR INSTALLED USERS -->
-    <meta name="app-version" content="1.10.1">
+    <meta name="app-version" content="1.0.9">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#09090b">
@@ -118,7 +118,7 @@
         }
     </style>
 </head>
-<body class="h-screen flex flex-col">
+<body class="h-[100dvh] w-full flex flex-col">
 
     <!-- Top Header -->
     <header class="bg-zinc-950 border-b border-zinc-800 p-3 flex justify-between items-center z-20 shadow-md shrink-0">
@@ -174,7 +174,7 @@
             </div>
 
             <!-- Inventory List -->
-            <div class="flex-auto min-h-0 overflow-y-auto p-2.5 md:p-4">
+            <div class="flex-auto min-h-0 overflow-y-auto p-2.5 md:p-4 pb-12 md:pb-8">
                 <h2 class="text-[10px] md:text-xs uppercase text-zinc-500 tracking-wider mb-2 md:mb-3 font-bold font-mono flex justify-between items-center">
                     <span>Local Cache</span>
                     <span id="storageCount" class="text-brand font-mono text-[10px] md:text-[11px]">0 Files</span>
@@ -217,12 +217,12 @@
             </div>
 
             <!-- Tab Content Area -->
-            <div class="flex-1 overflow-y-auto p-4 md:p-6 relative">
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 pb-32 md:pb-24 relative">
                 
                 <!-- FABRICATION TAB -->
-                <div id="tab-fabrication" class="tab-content h-full flex-col">
+                <div id="tab-fabrication" class="tab-content min-h-full flex-col">
                     <div id="noCraftingMsg" class="hidden flex-1 flex items-center justify-center text-zinc-600 font-mono text-center border-2 border-dashed border-zinc-800 rounded-lg p-10">No schematics loaded.</div>
-                    <div id="craftingContainer" class="flex flex-col gap-3 pb-10">
+                    <div id="craftingContainer" class="flex flex-col gap-3">
                         <!-- Categories injected here -->
                     </div>
                 </div>
@@ -298,7 +298,7 @@
                 <!-- RESEARCH TAB -->
                 <div id="tab-research" class="tab-content hidden">
                     <div class="relative">
-                        <div id="researchContainer" class="space-y-2 max-w-3xl mx-auto pb-10">
+                        <div id="researchContainer" class="space-y-2 max-w-3xl mx-auto">
                             <!-- Tech nodes injected here -->
                         </div>
                     </div>
@@ -365,6 +365,48 @@
                 <button onclick="hardReset()" class="bg-red-950/60 hover:bg-red-900/60 text-red-400 border border-red-800/60 px-3 py-1.5 rounded transition-colors w-full">
                     HARD RESET ARCHITECTURE
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Playtest / Dev Modal -->
+    <div id="playtestModal" class="hidden fixed inset-0 bg-zinc-950/90 z-[80] flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-zinc-900 border border-emerald-700 p-5 rounded-lg shadow-2xl max-w-2xl w-full flex flex-col gap-4 max-h-[90vh]">
+            <div class="flex justify-between items-center border-b border-zinc-800 pb-3 shrink-0">
+                <h2 class="text-lg font-bold text-emerald-500 font-mono">[ DEVELOPER SHELL ]</h2>
+                <button onclick="closePlaytestModal()" class="text-zinc-400 hover:text-white text-lg font-bold px-2 py-0.5 rounded hover:bg-zinc-800 transition-colors font-mono">✕</button>
+            </div>
+            
+            <div class="space-y-6 overflow-y-auto pr-2">
+                <!-- Data Management -->
+                <div class="bg-zinc-950 border border-zinc-800 p-3 rounded-lg flex flex-col gap-3">
+                    <h3 class="text-xs uppercase text-zinc-500 font-bold font-mono tracking-wider">Cloud / Data Management</h3>
+                    <div class="flex gap-2">
+                        <button onclick="devWipeCloudData()" class="flex-1 bg-red-950/60 hover:bg-red-900/60 text-red-400 border border-red-800/60 px-3 py-2 rounded text-xs font-bold font-mono transition-colors">Wipe Connected Cloud Save</button>
+                    </div>
+                </div>
+
+                <!-- Add Items -->
+                <div class="bg-zinc-950 border border-zinc-800 p-3 rounded-lg flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs uppercase text-zinc-500 font-bold font-mono tracking-wider">Inject Items</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-mono text-zinc-400">Amount:</span>
+                            <input id="playtestAmount" type="number" value="1000" class="w-20 bg-zinc-900 border border-zinc-700 px-2 py-1 rounded text-brand font-bold text-xs focus:outline-none focus:border-brand font-mono" />
+                            <button onclick="playtestAddAll()" class="bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-400 border border-emerald-500/50 px-2 py-1 rounded text-xs font-bold font-mono transition-colors">Add To All</button>
+                        </div>
+                    </div>
+                    <div id="playtestItemsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-2"></div>
+                </div>
+
+                <!-- Research -->
+                <div class="bg-zinc-950 border border-zinc-800 p-3 rounded-lg flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs uppercase text-zinc-500 font-bold font-mono tracking-wider">Force Compile Tech</h3>
+                        <button onclick="devUnlockAllAvailableTech()" class="bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-400 border border-emerald-500/50 px-2 py-1 rounded text-xs font-bold font-mono transition-colors">Compile All Ready</button>
+                    </div>
+                    <div id="devResearchGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -1032,6 +1074,40 @@
             } else {
                 showToast(`No new nodes ready to compile.`, "info");
             }
+        };
+
+        window.devWipeCloudData = async function() {
+            if (!isDevMode) return;
+            if (!state.syncCode) {
+                showToast("No active sync code to wipe.", "error");
+                return;
+            }
+            if (!window.CloudSync || !window.CloudSync.isReady) {
+                showToast("Cloud sync offline.", "error");
+                return;
+            }
+
+            openModal(
+                "Wipe Cloud Save",
+                `Are you sure you want to delete the cloud save for code ${state.syncCode}? This will NOT delete your local save.`,
+                "Wipe Cloud",
+                async () => {
+                    closeModal();
+                    showToast("Wiping cloud data...", "info");
+                    
+                    if (typeof window.CloudSync.deleteState === 'function') {
+                        const success = await window.CloudSync.deleteState(state.syncCode);
+                        if (success) {
+                            showToast("Cloud data wiped.", "success");
+                        } else {
+                            showToast("Failed to wipe cloud data.", "error");
+                        }
+                    } else {
+                        showToast("Delete function not implemented.", "error");
+                    }
+                },
+                true
+            );
         };
 
         let isResetting = false;
@@ -2158,7 +2234,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'hypostrate-local';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
@@ -2257,6 +2333,29 @@
                 } catch(e) {
                     console.error("Cloud pull failed", e);
                     return null;
+                }
+            },
+            async deleteState(code) {
+                if (!this.isReady) return false;
+                
+                if (this.isMock) {
+                    try {
+                        localStorage.removeItem('mock_sync_' + code);
+                        return true;
+                    } catch(e) {
+                        return false;
+                    }
+                }
+
+                if (!this.user) return false;
+                
+                try {
+                    const ref = doc(this.db, 'artifacts', appId, 'public', 'data', 'sync_saves', code);
+                    await deleteDoc(ref);
+                    return true;
+                } catch(e) {
+                    console.error("Cloud delete failed", e);
+                    return false;
                 }
             }
         };
