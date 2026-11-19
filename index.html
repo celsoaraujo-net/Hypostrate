@@ -133,8 +133,10 @@
             <button id="devMenuBtn" onclick="openPlaytestModal()" class="hidden text-xs bg-emerald-900/40 hover:bg-emerald-800/60 border border-emerald-500/50 text-emerald-400 px-2.5 py-1 rounded font-bold transition-colors flex items-center gap-1 shadow-sm">
                 <span>[ DEV ]</span>
             </button>
-            <button onclick="exportSave()" class="text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 px-2.5 py-1 rounded text-zinc-300 transition-colors hidden sm:block">Export</button>
-            <button onclick="importSave()" class="text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 px-2.5 py-1 rounded text-zinc-300 transition-colors hidden sm:block">Import</button>
+            <button onclick="openSystemModal()" class="text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 px-2.5 py-1 rounded text-zinc-300 transition-colors flex items-center gap-1 font-mono">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span class="hidden sm:inline">SYSTEM</span>
+            </button>
         </div>
     </header>
 
@@ -319,69 +321,49 @@
             <p id="modalDesc" class="text-sm text-zinc-300 font-mono">Description here.</p>
             <textarea id="modalTextarea" class="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-brand font-mono text-xs h-32 focus:outline-none focus:border-brand" spellcheck="false"></textarea>
             <div class="flex justify-end gap-3 mt-2 font-mono">
-                <button onclick="closeModal()" class="px-4 py-2 rounded text-sm font-bold text-zinc-400 hover:text-zinc-200 transition-colors">Abort</button>
+                <button id="modalAbortBtn" class="px-4 py-2 rounded text-sm font-bold text-zinc-400 hover:text-zinc-200 transition-colors">Abort</button>
                 <button id="modalActionBtn" class="btn-industrial px-4 py-2 rounded text-sm font-bold text-zinc-200">Execute</button>
             </div>
         </div>
     </div>
 
-    <!-- Playtest Resource Spawner Modal -->
-    <div id="playtestModal" class="hidden fixed inset-0 bg-zinc-950/90 z-[70] flex items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-zinc-900 border border-zinc-700 p-5 rounded-lg shadow-2xl max-w-2xl w-full flex flex-col gap-4 max-h-[90vh]">
+    <!-- System / Settings Modal -->
+    <div id="systemModal" class="hidden fixed inset-0 bg-zinc-950/90 z-[70] flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-zinc-900 border border-zinc-700 p-5 rounded-lg shadow-2xl max-w-md w-full flex flex-col gap-4 max-h-[90vh]">
             <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-xl">_</span>
-                    <h2 class="text-lg font-bold text-brand font-mono tracking-wide">Developer Shell</h2>
-                </div>
-                <button onclick="closePlaytestModal()" class="text-zinc-400 hover:text-white text-lg font-bold px-2 py-0.5 rounded hover:bg-zinc-800 transition-colors font-mono">✕</button>
+                <h2 class="text-lg font-bold text-brand font-mono">System & Data</h2>
+                <button onclick="closeSystemModal()" class="text-zinc-400 hover:text-white text-lg font-bold px-2 py-0.5 rounded hover:bg-zinc-800 transition-colors font-mono">✕</button>
             </div>
             
-            <div class="bg-zinc-950 border border-zinc-800 p-3 rounded-lg flex flex-wrap items-center justify-between gap-3 font-mono">
-                <div class="flex items-center gap-2">
-                    <label for="playtestAmount" class="text-xs text-zinc-400 uppercase tracking-wider font-bold">Inject Amt:</label>
-                    <input id="playtestAmount" type="number" value="100" class="w-28 bg-zinc-900 border border-zinc-700 px-2.5 py-1 rounded text-brand font-bold text-sm focus:outline-none focus:border-brand" />
+            <div class="space-y-4 overflow-y-auto pr-2">
+                <!-- Cloud Sync Section -->
+                <div class="bg-zinc-950 border border-zinc-800 p-3 rounded-lg flex flex-col gap-3">
+                    <h3 class="text-xs uppercase text-zinc-500 font-bold font-mono tracking-wider">Cloud Synchronization</h3>
+                    <div id="syncStatusContainer">
+                        <!-- Dynamic state: unlinked vs linked -->
+                    </div>
                 </div>
-                <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="text-xs text-zinc-500">Quick:</span>
-                    <button onclick="setPlaytestAmount(10)" class="px-2 py-0.5 text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-zinc-300 transition-colors">+10</button>
-                    <button onclick="setPlaytestAmount(100)" class="px-2 py-0.5 text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-zinc-300 transition-colors">+100</button>
-                    <button onclick="setPlaytestAmount(1000)" class="px-2 py-0.5 text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-zinc-300 transition-colors">+1k</button>
-                    <button onclick="setPlaytestAmount(10000)" class="px-2 py-0.5 text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-zinc-300 transition-colors">+10k</button>
+
+                <!-- Manual Save Section -->
+                <div class="bg-zinc-950 border border-zinc-800 p-3 rounded-lg flex flex-col gap-3">
+                    <h3 class="text-xs uppercase text-zinc-500 font-bold font-mono tracking-wider">Manual Hash Transfer</h3>
+                    <p class="text-xs text-zinc-400 font-mono">Export/Import local state via Base64 string for manual backup.</p>
+                    <div class="flex gap-2">
+                        <button onclick="exportSave()" class="flex-1 btn-industrial px-3 py-2 rounded text-xs font-bold text-zinc-300">Export Hash</button>
+                        <button onclick="importSave()" class="flex-1 btn-industrial px-3 py-2 rounded text-xs font-bold text-zinc-300">Import Hash</button>
+                    </div>
+                </div>
+                
+                <!-- Future Settings placeholder -->
+                <div class="bg-zinc-950 border border-zinc-800 p-3 rounded-lg flex flex-col gap-3 opacity-50">
+                    <h3 class="text-xs uppercase text-zinc-500 font-bold font-mono tracking-wider">Preferences (Coming Soon)</h3>
+                    <p class="text-xs text-zinc-400 font-mono">Audio, Theme, & Notifications</p>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto pr-1 space-y-6">
-                <!-- Items Section -->
-                <div>
-                    <h3 class="text-xs text-zinc-500 uppercase tracking-wider mb-2 font-bold font-mono">Inject Resources</h3>
-                    <div id="playtestItemsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                        <!-- Populated dynamically -->
-                    </div>
-                </div>
-
-                <!-- Research Section -->
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-xs text-zinc-500 uppercase tracking-wider font-bold font-mono">Force Compile Research</h3>
-                        <button onclick="devUnlockAllAvailableTech()" class="text-[10px] bg-zinc-800 hover:bg-zinc-700 px-2 py-1 rounded text-zinc-300 transition-colors border border-zinc-700 font-mono">Compile All Available</button>
-                    </div>
-                    <div id="devResearchGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <!-- Populated dynamically -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex justify-between items-center pt-2 border-t border-zinc-800 text-xs font-mono">
-                <div class="flex gap-2">
-                    <button onclick="playtestAddAll()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-3 py-1.5 rounded transition-colors">
-                        + Inject All
-                    </button>
-                    <button onclick="hardReset()" class="bg-red-950/60 hover:bg-red-900/60 text-red-400 border border-red-800/60 px-3 py-1.5 rounded transition-colors">
-                        HARD RESET
-                    </button>
-                </div>
-                <button onclick="closePlaytestModal()" class="btn-industrial px-4 py-1.5 rounded font-bold text-zinc-200">
-                    Exit
+            <div class="flex justify-end items-center pt-3 border-t border-zinc-800 text-xs font-mono">
+                <button onclick="hardReset()" class="bg-red-950/60 hover:bg-red-900/60 text-red-400 border border-red-800/60 px-3 py-1.5 rounded transition-colors w-full">
+                    HARD RESET ARCHITECTURE
                 </button>
             </div>
         </div>
@@ -763,24 +745,141 @@
             return Object.values(assignmentObj || {}).reduce((a, b) => a + b, 0);
         }
 
-        window.openModal = function(title, desc, actionText, actionCallback, isReadonly = false, initialText = "") {
+        window.openModal = function(title, desc, actionText, actionCallback, isReadonly = false, initialText = "", abortCallback = null) {
             const modal = document.getElementById('customModal');
             modal.classList.remove('hidden');
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalDesc').innerText = desc;
             
             const textarea = document.getElementById('modalTextarea');
-            textarea.value = initialText;
-            textarea.readOnly = isReadonly;
+            if (initialText === null) {
+                textarea.classList.add('hidden');
+            } else {
+                textarea.classList.remove('hidden');
+                textarea.value = initialText;
+                textarea.readOnly = isReadonly;
+            }
 
             const actionBtn = document.getElementById('modalActionBtn');
             actionBtn.innerText = actionText;
-            actionBtn.onclick = () => actionCallback(textarea.value);
+            actionBtn.onclick = () => actionCallback(textarea ? textarea.value : "");
+
+            const abortBtn = document.getElementById('modalAbortBtn');
+            if (abortBtn) {
+                abortBtn.onclick = () => {
+                    closeModal();
+                    if (abortCallback) abortCallback();
+                };
+            }
         };
 
         window.closeModal = function() {
             document.getElementById('customModal').classList.add('hidden');
-            document.getElementById('modalTextarea').value = "";
+            const textarea = document.getElementById('modalTextarea');
+            if (textarea) textarea.value = "";
+        };
+
+        window.openSystemModal = function() {
+            document.getElementById('systemModal').classList.remove('hidden');
+            updateSystemMenuUI();
+        };
+
+        window.closeSystemModal = function() {
+            document.getElementById('systemModal').classList.add('hidden');
+        };
+
+        window.updateSystemMenuUI = function() {
+            const container = document.getElementById('syncStatusContainer');
+            if (!container) return;
+            
+            if (state.syncCode) {
+                container.innerHTML = `
+                    <div class="text-xs text-brand bg-brand/10 border border-brand/30 p-2 rounded flex justify-between items-center font-mono">
+                        <span>Linked Code: <b class="tracking-widest">${state.syncCode}</b></span>
+                        <button onclick="forceCloudSync()" class="hover:underline">Push Now</button>
+                    </div>
+                    <p class="text-[10px] text-zinc-500 font-mono mt-1">Progress auto-syncs periodically and when leaving the app.</p>
+                    <button onclick="unlinkDevice()" class="mt-2 text-xs text-red-400 hover:text-red-300 font-mono underline text-left w-max">Unlink Device</button>
+                `;
+            } else {
+                container.innerHTML = `
+                    <p class="text-[11px] text-zinc-400 font-mono leading-tight mb-2">Generate a sync code on your main device, or enter an existing code here to link them.</p>
+                    <button onclick="generateSyncCode()" class="btn-industrial px-3 py-2 rounded text-xs font-bold text-zinc-300 w-full font-mono mb-3">Generate New Sync Code</button>
+                    <div class="flex gap-2">
+                        <input id="syncCodeInput" type="text" placeholder="HYPO-XXX-XXX" class="flex-1 bg-zinc-900 border border-zinc-700 px-2 py-1.5 rounded text-brand font-bold text-xs focus:outline-none focus:border-brand uppercase font-mono" />
+                        <button onclick="linkDevice()" class="btn-industrial text-brand px-4 py-1.5 rounded text-xs font-bold transition-colors font-mono">Link</button>
+                    </div>
+                `;
+            }
+        };
+
+        window.generateSyncCode = async function() {
+            if (!window.CloudSync || !window.CloudSync.isReady) {
+                showToast("Cloud sync is unavailable or offline.", "error");
+                return;
+            }
+            showToast("Generating code...", "info");
+            const newCode = await window.CloudSync.generateCode();
+            state.syncCode = newCode;
+            state.lastSaved = Date.now(); 
+            const success = await window.CloudSync.pushState(state, newCode);
+            if (success) {
+                saveToLocal();
+                updateSystemMenuUI();
+                showToast(`Sync Code: ${newCode}`, "success");
+            } else {
+                state.syncCode = null;
+                showToast("Cloud service unavailable.", "error");
+            }
+        };
+
+        window.linkDevice = async function() {
+            if (!window.CloudSync || !window.CloudSync.isReady) {
+                showToast("Cloud sync is unavailable or offline.", "error");
+                return;
+            }
+            const codeInput = document.getElementById('syncCodeInput').value.trim().toUpperCase();
+            if (!codeInput) {
+                showToast("Enter a sync code", "error");
+                return;
+            }
+            showToast("Linking device...", "info");
+            const cloudState = await window.CloudSync.pullState(codeInput);
+            if (cloudState) {
+                state = Object.assign(state, cloudState);
+                state.syncCode = codeInput;
+                saveToLocal();
+                updateUI();
+                updateSystemMenuUI();
+                showToast("Device linked! State loaded.", "success");
+            } else {
+                showToast("Invalid code or empty save.", "error");
+            }
+        };
+
+        window.forceCloudSync = async function() {
+            if (!state.syncCode || !window.CloudSync || !window.CloudSync.isReady) return;
+            state.lastSaved = Date.now();
+            const success = await window.CloudSync.pushState(state, state.syncCode);
+            if(success) showToast("Cloud Sync successful.", "success");
+            else showToast("Cloud Sync failed.", "error");
+        };
+
+        window.unlinkDevice = function() {
+            openModal(
+                "Unlink Device",
+                "Are you sure you want to unlink this device? Your local save will remain, but cloud syncing will stop.",
+                "Unlink",
+                () => {
+                    state.syncCode = null;
+                    saveToLocal();
+                    updateSystemMenuUI();
+                    showToast("Device unlinked.", "info");
+                    closeModal();
+                },
+                true,
+                null
+            );
         };
 
         window.openPlaytestModal = function() {
@@ -938,11 +1037,18 @@
         let isResetting = false;
 
         window.hardReset = function() {
-            if(confirm("WARNING: This will completely wipe your local save data and restart the architecture from scratch. This cannot be undone.\n\nExecute reset?")) {
-                isResetting = true;
-                localStorage.removeItem(SAVE_KEY);
-                location.reload();
-            }
+            openModal(
+                "HARD RESET",
+                "WARNING: This will completely wipe your local save data and restart the architecture from scratch. This cannot be undone.",
+                "Execute Reset",
+                () => {
+                    isResetting = true;
+                    localStorage.removeItem(SAVE_KEY);
+                    location.reload();
+                },
+                true,
+                null
+            );
         };
 
         window.exportSave = function() {
@@ -1951,6 +2057,7 @@
         function saveToLocal() {
             if (isResetting) return;
             try {
+                state.lastSaved = Date.now();
                 localStorage.setItem(SAVE_KEY, JSON.stringify(state));
             } catch(e) {
                 console.warn('Auto-save failed.');
@@ -1981,11 +2088,38 @@
             }
         }
         
-        document.addEventListener('visibilitychange', () => {
+        document.addEventListener('visibilitychange', async () => {
             if (document.visibilityState === 'hidden') {
                 saveToLocal();
+                if (state.syncCode && window.CloudSync && window.CloudSync.isReady) {
+                    window.CloudSync.pushState(state, state.syncCode);
+                }
             } else if (document.visibilityState === 'visible') {
                 checkForUpdates();
+                if (state.syncCode && window.CloudSync && window.CloudSync.isReady) {
+                    const cloudState = await window.CloudSync.pullState(state.syncCode);
+                    if (cloudState && cloudState.lastSaved > (state.lastSaved || 0)) {
+                        openModal(
+                            "Cloud Conflict",
+                            "A newer save was found in the cloud (from another device). Load it now? If aborted, local state will overwrite cloud on next sync.",
+                            "Load Cloud Save",
+                            () => {
+                                state = Object.assign(state, cloudState);
+                                saveToLocal();
+                                updateUI();
+                                updateSystemMenuUI();
+                                showToast("Loaded cloud save.", "success");
+                                closeModal();
+                            },
+                            true,
+                            null,
+                            () => {
+                                state.lastSaved = Date.now();
+                                saveToLocal();
+                            }
+                        );
+                    }
+                }
             }
         });
         
@@ -2009,9 +2143,91 @@
             setInterval(gameTick, 1000); 
             setInterval(queueTick, 50);
             setInterval(saveToLocal, 10000); 
+            
+            // Periodic Cloud Sync
+            setInterval(() => {
+                if (state.syncCode && window.CloudSync && window.CloudSync.isReady && document.visibilityState === 'visible') {
+                    window.CloudSync.pushState(state, state.syncCode);
+                }
+            }, 60000);
         }
 
         window.addEventListener('DOMContentLoaded', init);
+    </script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hypostrate-local';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const customToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        window.CloudSync = {
+            isReady: false,
+            db: null,
+            auth: null,
+            user: null,
+            async init() {
+                if (!firebaseConfig) {
+                    console.log("No Firebase config found. Cloud sync disabled.");
+                    return false;
+                }
+                const app = initializeApp(firebaseConfig);
+                this.db = getFirestore(app);
+                this.auth = getAuth(app);
+                
+                if (customToken) {
+                    await signInWithCustomToken(this.auth, customToken);
+                } else {
+                    await signInAnonymously(this.auth);
+                }
+                this.user = this.auth.currentUser;
+                this.isReady = true;
+                return true;
+            },
+            async generateCode() {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                let code = 'HYPO-';
+                for(let i=0; i<6; i++) {
+                    if(i===3) code += '-';
+                    code += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return code;
+            },
+            async pushState(stateObj, code) {
+                if (!this.isReady || !this.user) return false;
+                try {
+                    const ref = doc(this.db, 'artifacts', appId, 'public', 'data', 'sync_saves', code);
+                    const dataToSave = {
+                        stateStr: JSON.stringify(stateObj),
+                        updatedAt: serverTimestamp()
+                    };
+                    await setDoc(ref, dataToSave);
+                    return true;
+                } catch(e) {
+                    console.error("Cloud push failed", e);
+                    return false;
+                }
+            },
+            async pullState(code) {
+                if (!this.isReady || !this.user) return null;
+                try {
+                    const ref = doc(this.db, 'artifacts', appId, 'public', 'data', 'sync_saves', code);
+                    const snap = await getDoc(ref);
+                    if (snap.exists()) {
+                        return JSON.parse(snap.data().stateStr);
+                    }
+                    return null;
+                } catch(e) {
+                    console.error("Cloud pull failed", e);
+                    return null;
+                }
+            }
+        };
+
+        window.CloudSync.init();
     </script>
 </body>
 </html>
