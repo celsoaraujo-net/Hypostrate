@@ -6,7 +6,7 @@
     <title>Hypostrate</title>
     
     <!-- UPDATE THIS VERSION TO TRIGGER AUTOMATIC APP REFRESH FOR INSTALLED USERS -->
-    <meta name="app-version" content="1.10.2">
+    <meta name="app-version" content="1.10.4">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#09090b">
@@ -729,6 +729,9 @@
             craftingQueue: [],
             machineProgress: {}
         };
+        
+        let lastInventoryAmount = {};
+        let inventoryGlows = {};
 
         function getItemAmount(id) {
             return (state.inventory && state.inventory[id]) || 0;
@@ -1556,6 +1559,15 @@
                 }
             }
 
+            // Clear expired inventory glows
+            let now = Date.now();
+            for (let id in inventoryGlows) {
+                if (inventoryGlows[id] && inventoryGlows[id].expires <= now) {
+                    inventoryGlows[id] = null;
+                    stateChanged = true;
+                }
+            }
+
             if (stateChanged) updateUI();
         }
 
@@ -1718,6 +1730,7 @@
             // Inventory Sidebar
             const invContainer = document.getElementById('inventoryContainer');
             let totalItemTypes = 0;
+            let now = Date.now();
             
             if (invContainer) {
                 invContainer.innerHTML = '';
@@ -1730,8 +1743,28 @@
                     let itemMax = getMaxStorage(id);
                     let fillPct = Math.min(100, Math.round((amount / itemMax) * 100));
 
+                    // Evaluate Trend & apply glow settings
+                    let prevAmount = lastInventoryAmount[id];
+                    if (prevAmount !== undefined) {
+                        if (amount > prevAmount) {
+                            inventoryGlows[id] = { type: 'green', expires: now + 2000 };
+                        } else if (amount < prevAmount) {
+                            inventoryGlows[id] = { type: 'red', expires: now + 2000 };
+                        }
+                    }
+                    lastInventoryAmount[id] = amount;
+
+                    let glowClass = 'bg-zinc-800/60 hover:bg-zinc-800 border-zinc-700/60';
+                    if (inventoryGlows[id] && inventoryGlows[id].expires > now) {
+                        if (inventoryGlows[id].type === 'green') {
+                            glowClass = 'bg-emerald-900/30 hover:bg-emerald-900/40 border-brand/60 shadow-[0_0_8px_rgba(16,185,129,0.3)]';
+                        } else if (inventoryGlows[id].type === 'red') {
+                            glowClass = 'bg-red-900/30 hover:bg-red-900/40 border-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.3)]';
+                        }
+                    }
+
                     invContainer.innerHTML += `
-                        <div class="relative overflow-hidden p-1.5 md:p-1 rounded bg-zinc-800/60 hover:bg-zinc-800 transition-colors border border-zinc-700/60 flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-1.5 has-tooltip cursor-help" data-tip="${item.name}&#10;Cached: ${formatNumber(amount)} / ${formatNumber(itemMax)}&#10;Cap Filled: ${fillPct}%">
+                        <div class="relative overflow-hidden p-1.5 md:p-1 rounded transition-all duration-300 border flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-1.5 has-tooltip cursor-help ${glowClass}" data-tip="${item.name}&#10;Cached: ${formatNumber(amount)} / ${formatNumber(itemMax)}&#10;Cap Filled: ${fillPct}%">
                             <span class="text-lg md:text-sm shrink-0 leading-none ${item.color}">${item.icon}</span>
                             <span class="font-mono text-zinc-200 text-[10px] md:text-[11px] font-semibold leading-none">${formatNumber(amount)}</span>
                             <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-zinc-900/80">
