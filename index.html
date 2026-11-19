@@ -6,7 +6,7 @@
     <title>Hypostrate</title>
     
     <!-- UPDATE THIS VERSION TO TRIGGER AUTOMATIC APP REFRESH FOR INSTALLED USERS -->
-    <meta name="app-version" content="1.0.7">
+    <meta name="app-version" content="1.0.8">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#09090b">
@@ -1618,33 +1618,33 @@
                                             let yieldAmt = item.yield || 1;
                                             let itemMax = getMaxStorage(id);
 
-                                            return \`
+                                            return `
                                                 <div class="bg-zinc-900 border border-zinc-800 p-2 rounded flex flex-col justify-between gap-2 shadow-sm min-w-0">
                                                     <div class="flex justify-between items-center w-full gap-1">
                                                         <div class="flex items-center gap-1.5 min-w-0">
-                                                            <span class="text-lg shrink-0">\${item.icon}</span>
-                                                            <h3 class="font-bold text-zinc-200 text-[11px] sm:text-xs truncate font-mono">\${item.name}</h3>
+                                                            <span class="text-lg shrink-0">${item.icon}</span>
+                                                            <h3 class="font-bold text-zinc-200 text-[11px] sm:text-xs truncate font-mono">${item.name}</h3>
                                                         </div>
                                                         <span class="text-[9px] bg-zinc-950 border border-zinc-800 px-1 py-0.5 rounded font-mono text-brand shrink-0">
-                                                            \${formatNumber(getItemAmount(id))}
+                                                            ${formatNumber(getItemAmount(id))}
                                                         </span>
                                                     </div>
                                                     <div class="flex flex-wrap gap-1">
-                                                        \${renderCost(item.cost)}
+                                                        ${renderCost(item.cost)}
                                                     </div>
                                                     <div class="mt-auto pt-1 flex gap-1 w-full font-mono">
-                                                        <div class="has-tooltip flex-1 flex" data-tip="\${getCostString(item.cost, 1, id)}">
-                                                            <button onclick="craftItem('\${id}', 1)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" \${!canAfford(item.cost, 1) || currentWithQueue + yieldAmt > itemMax ? 'disabled' : ''}>1x</button>
+                                                        <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 1, id)}">
+                                                            <button onclick="craftItem('${id}', 1)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 1) || currentWithQueue + yieldAmt > itemMax ? 'disabled' : ''}>1x</button>
                                                         </div>
-                                                        <div class="has-tooltip flex-1 flex" data-tip="\${getCostString(item.cost, 10, id)}">
-                                                            <button onclick="craftItem('\${id}', 10)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" \${!canAfford(item.cost, 10) || currentWithQueue + (yieldAmt * 10) > itemMax ? 'disabled' : ''}>10x</button>
+                                                        <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 10, id)}">
+                                                            <button onclick="craftItem('${id}', 10)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 10) || currentWithQueue + (yieldAmt * 10) > itemMax ? 'disabled' : ''}>10x</button>
                                                         </div>
-                                                        <div class="has-tooltip flex-1 flex" data-tip="\${getCostString(item.cost, 25, id)}">
-                                                            <button onclick="craftItem('\${id}', 25)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" \${!canAfford(item.cost, 25) || currentWithQueue + (yieldAmt * 25) > itemMax ? 'disabled' : ''}>25x</button>
+                                                        <div class="has-tooltip flex-1 flex" data-tip="${getCostString(item.cost, 25, id)}">
+                                                            <button onclick="craftItem('${id}', 25)" class="w-full btn-industrial py-1.5 rounded text-[10px] font-bold text-zinc-300" ${!canAfford(item.cost, 25) || currentWithQueue + (yieldAmt * 25) > itemMax ? 'disabled' : ''}>25x</button>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            \`;
+                                            `;
                                         }).join('')}
                                     </div>
                                 </details>
@@ -1811,34 +1811,34 @@
                                         let hasIron = getItemAmount('data_reel') > 0;
                                         let hasSteel = getItemAmount('server_rack') > 0;
 
-                                        let ironBtn = \`<button onclick="installChest('\${id}', 'reel')" class="btn-industrial px-2 py-1.5 rounded text-[10px] font-bold text-zinc-300 w-full flex items-center justify-between transition-opacity font-mono \${!hasIron ? 'opacity-50 cursor-not-allowed' : 'hover:border-zinc-500/50'}" \${!hasIron ? 'disabled' : ''} title="Costs 1 Data Reel">
+                                        let ironBtn = `<button onclick="installChest('${id}', 'reel')" class="btn-industrial px-2 py-1.5 rounded text-[10px] font-bold text-zinc-300 w-full flex items-center justify-between transition-opacity font-mono ${!hasIron ? 'opacity-50 cursor-not-allowed' : 'hover:border-zinc-500/50'}" ${!hasIron ? 'disabled' : ''} title="Costs 1 Data Reel">
                                             <span>Mount Reel</span>
                                             <span class="text-zinc-400 font-mono">+250</span>
-                                        </button>\`;
+                                        </button>`;
 
-                                        let steelBtn = hasSteelUnlocked ? \`<button onclick="installChest('\${id}', 'rack')" class="btn-industrial px-2 py-1.5 rounded text-[10px] font-bold text-zinc-300 w-full flex items-center justify-between transition-opacity font-mono \${!hasSteel || iCount <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-400/50'}" \${!hasSteel || iCount <= 0 ? 'disabled' : ''} title="Costs 1 Server Rack & Replaces 1 Mounted Reel">
-                                            <span class="\${iCount <= 0 ? 'text-zinc-500' : ''}">Deploy Rack</span>
+                                        let steelBtn = hasSteelUnlocked ? `<button onclick="installChest('${id}', 'rack')" class="btn-industrial px-2 py-1.5 rounded text-[10px] font-bold text-zinc-300 w-full flex items-center justify-between transition-opacity font-mono ${!hasSteel || iCount <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-400/50'}" ${!hasSteel || iCount <= 0 ? 'disabled' : ''} title="Costs 1 Server Rack & Replaces 1 Mounted Reel">
+                                            <span class="${iCount <= 0 ? 'text-zinc-500' : ''}">Deploy Rack</span>
                                             <span class="text-blue-400 font-mono">+750</span>
-                                        </button>\` : '';
+                                        </button>` : '';
 
-                                        return \`
+                                        return `
                                             <div class="bg-zinc-950 border border-zinc-800/80 p-2 rounded flex flex-col gap-2">
                                                 <div class="flex justify-between items-center gap-1">
                                                     <div class="flex items-center gap-1.5 min-w-0 pr-1">
-                                                        <span class="text-lg shrink-0 leading-none">\${item.icon}</span>
-                                                        <span class="text-[10px] text-brand font-mono leading-none font-bold truncate">Cap: \${formatNumber(curMax)}</span>
+                                                        <span class="text-lg shrink-0 leading-none">${item.icon}</span>
+                                                        <span class="text-[10px] text-brand font-mono leading-none font-bold truncate">Cap: ${formatNumber(curMax)}</span>
                                                     </div>
                                                     <div class="text-[9px] font-mono text-zinc-500 flex gap-1.5 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 shrink-0">
-                                                        <span class="\${iCount > 0 ? 'text-zinc-300 font-bold' : ''}" title="Mounted Reels">RL: \${iCount}</span>
-                                                        \${hasSteelUnlocked ? \`<span class="\${sCount > 0 ? 'text-blue-300 font-bold' : ''}" title="Deployed Server Racks">RK: \${sCount}</span>\` : ''}
+                                                        <span class="${iCount > 0 ? 'text-zinc-300 font-bold' : ''}" title="Mounted Reels">RL: ${iCount}</span>
+                                                        ${hasSteelUnlocked ? `<span class="${sCount > 0 ? 'text-blue-300 font-bold' : ''}" title="Deployed Server Racks">RK: ${sCount}</span>` : ''}
                                                     </div>
                                                 </div>
                                                 <div class="flex flex-col gap-1 w-full">
-                                                    \${ironBtn}
-                                                    \${steelBtn}
+                                                    ${ironBtn}
+                                                    ${steelBtn}
                                                 </div>
                                             </div>
-                                        \`;
+                                        `;
                                     }).join('')}
                                 </div>
                             </details>
